@@ -1,0 +1,51 @@
+/* Reset / base */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+.app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden; /* scrolling only inside columns */
+  background: #050816; /* or var(--bg-page) */
+  color: #e5e7eb;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+/* ===== Left sidebar (component <Sidebar /> should use className="sidebar") ===== */
+.sidebar {
+  width: 260px;          /* fixed left width */
+  flex-shrink: 0;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+}
+
+/* ===== Main content (center) ===== */
+.main-content {
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+/* ===== Right sidebar (component should use className="right-sidebar") ===== */
+.right-sidebar {
+  width: 320px;          /* fixed right width */
+  flex-shrink: 0;
+  height: 100vh;
+  background: #e5e6ee;
+  border-left: 1px solid rgba(148, 163, 184, 0.25);
+  padding: 16px 18px;
+  overflow-y: auto;
+}

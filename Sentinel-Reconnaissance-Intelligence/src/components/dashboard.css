@@ -1,0 +1,245 @@
+  /* =============== LAYOUT =============== */
+
+  .dashboard-container {
+    width: 100%;
+    min-height: 100%;
+    padding: 0 20px 20px; /* no gap at top, side + bottom padding only */
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background: #f3f4f6;
+    color: #111827;
+  }
+
+  /* Header sticks to top inside the page content */
+  .dashboard-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    padding: 10px 16px;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+
+    /* No rounding on top to feel flush with page top */
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
+  }
+
+  /* Optional: hide scrollbars globally */
+  *::-webkit-scrollbar {
+    display: none !important;
+  }
+  * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  /* =============== HEADER LEFT =============== */
+
+  .dh-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .dh-title {
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: #111827;
+    white-space: nowrap;
+  }
+
+  .dh-subtitle {
+    font-size: 0.78rem;
+    color: #6b7280;
+  }
+
+  /* =============== HEADER MIDDLE =============== */
+
+  .dh-middle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .dh-middle-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .dh-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #9ca3af;
+  }
+
+  .dh-value {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #111827;
+  }
+
+  .dh-separator {
+    font-size: 0.9rem;
+    color: #d1d5db;
+  }
+
+  /* Weather mini-logo + text */
+  .dh-weather {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dh-weather-icon {
+    position: relative;
+    width: 30px;
+    height: 24px;
+  }
+
+  /* simple sun + cloud shapes */
+  .dh-weather-sun {
+    position: absolute;
+    left: 0;
+    top: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: radial-gradient(circle at 30% 30%, #fef9c3, #facc15);
+  }
+
+  .dh-weather-cloud {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 18px;
+    height: 12px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    box-shadow: -8px 0 0 0 #e5e7eb;
+  }
+
+  .dh-weather-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: left;
+  }
+
+  /* =============== HEADER RIGHT =============== */
+
+  .dh-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .dh-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #374151;
+  }
+
+  .dh-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-start;
+  }
+
+  /* reuse dh-label, dh-value styles for text */
+
+  /* =============== RESPONSIVE =============== */
+
+  @media (max-width: 960px) {
+    .dashboard-header {
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .dh-left {
+      flex: 1 1 100%;
+    }
+
+    .dh-middle {
+      flex: 1 1 100%;
+      order: 3;
+      margin-top: 4px;
+    }
+
+    .dh-right {
+      order: 2;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .dashboard-container {
+      padding: 0 12px 16px;
+      gap: 16px;
+    }
+
+    .dashboard-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .dh-middle {
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .dh-title {
+      font-size: 0.9rem;
+    }
+
+    .dh-subtitle {
+      font-size: 0.72rem;
+    }
+
+    .dh-value {
+      font-size: 0.8rem;
+    }
+  }
+/* Right profile container */
+.dh-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* NEW — Real user image icon */
+.dh-user-real-icon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  filter: drop-shadow(0px 0px 4px rgba(0,0,0,0.2));
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.dh-user-real-icon:hover {
+  transform: scale(1.08);
+}

@@ -1,0 +1,138 @@
+/* MAIN SCROLL WRAPPER */
+.team-detail-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden; /* keeps header fixed */
+}
+
+/* fixed navigation bar */
+.navigation-bar {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.back-button {
+  background: none;
+  border: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  background: var(--surface-hover);
+  border-color: var(--text-muted);
+}
+
+.breadcrumb {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* Content Scrolls */
+.team-content-section {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  padding-bottom: 2rem;
+}
+
+/* Scrollbar Styling */
+.team-content-section::-webkit-scrollbar {
+  width: 6px;
+}
+
+.team-content-section::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+.team-content-section::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+/* Header Card */
+.team-header-simple {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--border);
+}
+
+.team-header-content {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.team-main-icon {
+  font-size: 3rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.team-main-name {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.team-main-description {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.team-contact-info {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.team-contact-info span {
+  background: white;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .team-header-simple {
+    padding: 1.5rem;
+  }
+
+  .team-header-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .team-contact-info {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .team-main-name {
+    font-size: 1.25rem;
+  }
+
+  .team-contact-info {
+    flex-direction: column;
+  }
+}

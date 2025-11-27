@@ -1,0 +1,250 @@
+/* =============== CAMERA WALL WRAPPER =============== */
+
+.live-feeds-wrapper {
+  width: 100%;
+  max-width: 1400px;
+  margin: 10px auto;
+  padding: 6px;
+  box-sizing: border-box;
+
+  background: #020617;
+  border-radius: 10px;
+  border: 1px solid #111827;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+}
+
+/* =============== RESPONSIVE GRID =============== */
+/* Uses auto-fit so it adapts beautifully to width */
+
+.camera-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+/* =============== CAMERA TILE =============== */
+
+.camera-card {
+  background: #020617;
+  border-radius: 6px;
+  border: 1px solid #111827;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    transform 0.12s ease;
+}
+
+.camera-card:hover {
+  border-color: #38bdf8;
+  box-shadow: 0 5px 16px rgba(56, 189, 248, 0.35);
+  transform: translateY(-1px);
+}
+
+.camera-card-offline {
+  border-color: #ef4444;
+}
+
+/* =============== VIDEO AREA WITH OVERLAYS =============== */
+
+.camera-video {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9; /* responsive rectangle */
+  background: radial-gradient(circle at 20% 20%, #111827 0, #020617 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Center label */
+.camera-video-center {
+  font-size: 0.72rem;
+  color: #e5e7eb;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+/* Generic overlay chip */
+.overlay-chip {
+  position: absolute;
+  font-size: 0.62rem;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #e5e7eb;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* CAM ID top-left */
+.overlay-camid {
+  top: 6px;
+  left: 8px;
+}
+
+/* Status top-right */
+.overlay-status {
+  top: 6px;
+  right: 8px;
+}
+
+.overlay-status-live {
+  background: rgba(22, 163, 74, 0.9);
+}
+
+.overlay-status-offline {
+  background: rgba(220, 38, 38, 0.9);
+}
+
+.overlay-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #fefce8;
+}
+
+/* Bottom: name + location */
+
+.overlay-bottom {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 4px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.overlay-text-block {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+}
+
+.overlay-name {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #f9fafb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.overlay-location {
+  font-size: 0.62rem;
+  color: #e5e7eb;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =============== RESPONSIVE TWEAKS =============== */
+
+@media (max-width: 768px) {
+  .live-feeds-wrapper {
+    padding: 6px;
+    border-radius: 8px;
+  }
+
+  .camera-grid {
+    gap: 6px;
+  }
+
+  .camera-video-center {
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .live-feeds-wrapper {
+    margin: 8px auto;
+  }
+}
+
+/* =============== MODAL =============== */
+
+.camera-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.camera-modal-content {
+  width: min(90vw, 900px);
+  background: #020617;
+  border-radius: 14px;
+  border: 1px solid #1f2937;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  padding: 14px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.camera-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.camera-modal-title h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #e5e7eb;
+}
+
+.camera-modal-title span {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.camera-modal-close {
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.camera-modal-video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  background: radial-gradient(circle at 20% 20%, #111827 0, #020617 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-modal-video span {
+  font-size: 0.8rem;
+  color: #e5e7eb;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.camera-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+@media (max-width: 600px) {
+  .camera-modal-content {
+    width: 94vw;
+  }
+
+  .camera-modal-footer {
+    flex-direction: column;
+    gap: 4px;
+  }
+}

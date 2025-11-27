@@ -1,0 +1,220 @@
+/* overall wrapper – can sit inside a column on the dashboard */
+.notifications-section {
+  flex-shrink: 0;
+}
+
+/* card similar to ES dashboard panels */
+.notifications-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e5e7f3;
+  padding: 0.9rem 1rem;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+/* header */
+.notifications-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.notifications-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.notifications-main-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 10px 18px rgba(79, 70, 229, 0.35);
+}
+
+.notifications-main-icon .icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.notifications-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.notifications-title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.notifications-subtitle {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #6b7280;
+}
+
+/* chip on right side – small, pill style like screenshot */
+.notifications-chip {
+  border: none;
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: #e0e7ff;
+  color: #4f46e5;
+  cursor: default;
+}
+
+/* list area */
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+/* each notification row – flat card style */
+.notification-item {
+  display: grid;
+  grid-template-columns: 4px 1fr;
+  column-gap: 0.6rem;
+  padding: 0.45rem 0.6rem;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 1px solid #edf2ff;
+  transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.notification-item:hover {
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
+}
+
+/* left color strip */
+.notification-indicator {
+  border-radius: 999px;
+  align-self: stretch;
+}
+
+.notification-indicator.success {
+  background: #22c55e;
+}
+
+.notification-indicator.info {
+  background: #3b82f6;
+}
+
+.notification-indicator.warning {
+  background: #f59e0b;
+}
+
+.notification-indicator.error {
+  background: #ef4444;
+}
+
+/* main content */
+.notification-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.notification-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.notification-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.notification-time {
+  font-size: 0.65rem;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+.notification-message {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #4b5563;
+}
+
+/* small tag under message */
+.notification-tag {
+  margin-top: 0.1rem;
+  align-self: flex-start;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+}
+
+.notification-tag.success {
+  background: #ecfdf5;
+  color: #15803d;
+}
+
+.notification-tag.info {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.notification-tag.warning {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.notification-tag.error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+/* icon base */
+.icon {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+/* slim scrollbar like dashboards */
+.notifications-list::-webkit-scrollbar {
+  width: 3px;
+}
+
+.notifications-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.notifications-list::-webkit-scrollbar-thumb {
+  background: #c7d2fe;
+  border-radius: 999px;
+}
+
+/* responsive tweaks */
+@media (max-width: 768px) {
+  .notifications-card {
+    padding: 0.8rem 0.85rem;
+  }
+
+  .notifications-list {
+    max-height: 190px;
+  }
+}
+  
