@@ -202,10 +202,188 @@ app.post("/api/upload-video", async (req, res) => {
 // -------------------------------
 
 
+// app.post("/api/push-frame", async (req, res) => {
+//   try {
+//     console.log("📩 Frame received from Python:", req.body);
+
+//     const { folderId, videoId, timestamp, duration, imageUrl, shortSummary } = req.body;
+
+//     if (!folderId || !videoId) {
+//       return res.status(400).json({ error: "folderId and videoId are required" });
+//     }
+
+//     const folder = await Folder.findById(folderId);
+//     if (!folder) return res.status(404).json({ error: "Folder not found" });
+
+//     const video = folder.videos.id(videoId);
+//     if (!video) return res.status(404).json({ error: "Video not found" });
+
+//     const newFrame = { timestamp, duration, imageUrl, shortSummary };
+//     video.detectedFrames.push(newFrame);
+
+//     await folder.save();
+
+//     broadcast({
+//       type: "NEW_FRAME",
+//       folderId,
+//       videoId,
+//       frame: newFrame
+//     });
+
+//     res.json({ message: "Frame saved successfully", frame: newFrame });
+
+//   } catch (err) {
+//     console.error("❌ Frame Save Error:", err);
+//     res.status(500).json({ error: "Failed to save detected frame" });
+//   }
+// });
+
+
+app.post("/api/create-folder", async (req, res) => {
+  try {
+    const folder = await Folder.create({
+      name: "Session - " + new Date().toISOString(),
+      description: "Auto-created session folder",
+      videos: []
+    });
+
+    return res.json({
+      message: "Folder created",
+      folderId: folder._id
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: "Failed to create folder" });
+  }
+});
+
+
+app.post("/api/add-video-to-folder", async (req, res) => {
+  try {
+    const { folderId, videoName, videoUrl } = req.body;
+
+    const folder = await Folder.findById(folderId);
+    if (!folder) return res.status(404).json({ error: "Folder not found" });
+
+    const newVideo = folder.videos.create({
+      originalName: videoName,
+      videoUrl,
+      detectedFrames: [],
+      timeline: [],
+      shortSummary: "",
+      finalSummary: ""
+    });
+
+    folder.videos.push(newVideo);
+    await folder.save();
+
+    res.json({
+      message: "Video added",
+      videoId: newVideo._id
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: "Failed to add video" });
+  }
+});
+
+
+
+
+// app.post("/api/push-frame", async (req, res) => {
+//   try {
+//     console.log("📩 Frame received from Python:", req.body);
+
+//     let { folderId, videoId, timestamp, duration, imageUrl, shortSummary } = req.body;
+
+//     // -------------------------------------------------------
+//     // 1️⃣ AUTO-CREATE FOLDER IF NOT EXISTS
+//     // -------------------------------------------------------
+//     if (!folderId) {
+//       console.log("📁 No folderId received → Creating new auto folder...");
+
+//       const autoFolder = await Folder.create({
+//         name: "Auto Folder - " + new Date().toLocaleString(),
+//         description: "Automatically created for this video upload",
+//         videos: [],
+//       });
+
+//       folderId = autoFolder._id;
+//     }
+
+//     // Get folder (either newly created or existing)
+//     const folder = await Folder.findById(folderId);
+//     if (!folder) return res.status(404).json({ error: "Folder not found" });
+
+//     // -------------------------------------------------------
+//     // 2️⃣ AUTO-CREATE VIDEO ENTRY IF NOT EXISTS
+//     // -------------------------------------------------------
+//     if (!videoId) {
+//       console.log("🎥 No videoId received → Creating new video entry...");
+
+//       const newVid = folder.videos.create({
+//         originalName: "video.mp4",
+//         videoUrl: "N/A",           // optional; later update when actual video is uploaded
+//         duration: "",
+//         shortSummary: "",
+//         finalSummary: "",
+//         timeline: [],
+//         detectedFrames: []
+//       });
+
+//       folder.videos.push(newVid);
+//       videoId = newVid._id;
+//       await folder.save();
+//     }
+
+//     const video = folder.videos.id(videoId);
+//     if (!video) return res.status(404).json({ error: "Video not found" });
+
+//     // -------------------------------------------------------
+//     // 3️⃣ INSERT FRAME DATA
+//     // -------------------------------------------------------
+//     const newFrame = {
+//       timestamp,
+//       duration,
+//       imageUrl,
+//       shortSummary,
+//     };
+
+//     video.detectedFrames.push(newFrame);
+//     await folder.save();
+
+//     // -------------------------------------------------------
+//     // 4️⃣ WEBSOCKET BROADCAST
+//     // -------------------------------------------------------
+//     broadcast({
+//       type: "NEW_FRAME",
+//       folderId,
+//       videoId,
+//       frame: newFrame,
+//     });
+
+//     // -------------------------------------------------------
+//     // 5️⃣ RESPONSE TO PYTHON
+//     // -------------------------------------------------------
+//     res.json({
+//       message: "Frame saved successfully",
+//       folderId,
+//       videoId,
+//       frame: newFrame,
+//     });
+
+//   } catch (err) {
+//     console.error("❌ Frame Save Error:", err);
+//     res.status(500).json({ error: "Failed to save detected frame" });
+//   }
+// });
+
+
+
+
+
 app.post("/api/push-frame", async (req, res) => {
   try {
-    console.log("📩 Frame received from Python:", req.body);
-
     const { folderId, videoId, timestamp, duration, imageUrl, shortSummary } = req.body;
 
     if (!folderId || !videoId) {
@@ -227,16 +405,17 @@ app.post("/api/push-frame", async (req, res) => {
       type: "NEW_FRAME",
       folderId,
       videoId,
-      frame: newFrame
+      frame: newFrame,
     });
 
     res.json({ message: "Frame saved successfully", frame: newFrame });
 
   } catch (err) {
-    console.error("❌ Frame Save Error:", err);
-    res.status(500).json({ error: "Failed to save detected frame" });
+    res.status(500).json({ error: "Failed to save frame" });
   }
 });
+
+
 
 
 
