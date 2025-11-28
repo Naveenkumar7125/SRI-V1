@@ -886,3 +886,12 @@
     gap: 8px;
   }
 }
+
+
+
+.detected-preview-img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 6px;
+}

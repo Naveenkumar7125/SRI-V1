@@ -406,16 +406,20 @@ export default function UploadArea({
 
   // Run AI Analysis (upload all files)
   const analyzeFolder = async () => {
-    if (!uploadedFiles.length) return;
+  if (!uploadedFiles.length) return;
 
-    setIsAnalyzing(true);
+  setIsAnalyzing(true);
 
-    for (const file of uploadedFiles) {
-      await uploadToBackend(file);
-    }
+  for (const file of uploadedFiles) {
+    await uploadToBackend(file);
+  }
 
-    setIsAnalyzing(false);
-  };
+  setIsAnalyzing(false);
+
+  // ⭐ Automatically move to analysis view page
+  setShowAnalysis(true);
+};
+
 
   return (
     <div className="upload-center">
