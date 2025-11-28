@@ -239,53 +239,53 @@ app.post("/api/upload-video", async (req, res) => {
 // });
 
 
-app.post("/api/create-folder", async (req, res) => {
-  try {
-    const folder = await Folder.create({
-      name: "Session - " + new Date().toISOString(),
-      description: "Auto-created session folder",
-      videos: []
-    });
+// app.post("/api/create-folder", async (req, res) => {
+//   try {
+//     const folder = await Folder.create({
+//       name: "Session - " + new Date().toISOString(),
+//       description: "Auto-created session folder",
+//       videos: []
+//     });
 
-    return res.json({
-      message: "Folder created",
-      folderId: folder._id
-    });
+//     return res.json({
+//       message: "Folder created",
+//       folderId: folder._id
+//     });
 
-  } catch (err) {
-    res.status(500).json({ error: "Failed to create folder" });
-  }
-});
+//   } catch (err) {
+//     res.status(500).json({ error: "Failed to create folder" });
+//   }
+// });
 
 
-app.post("/api/add-video-to-folder", async (req, res) => {
-  try {
-    const { folderId, videoName, videoUrl } = req.body;
+// app.post("/api/add-video-to-folder", async (req, res) => {
+//   try {
+//     const { folderId, videoName, videoUrl } = req.body;
 
-    const folder = await Folder.findById(folderId);
-    if (!folder) return res.status(404).json({ error: "Folder not found" });
+//     const folder = await Folder.findById(folderId);
+//     if (!folder) return res.status(404).json({ error: "Folder not found" });
 
-    const newVideo = folder.videos.create({
-      originalName: videoName,
-      videoUrl,
-      detectedFrames: [],
-      timeline: [],
-      shortSummary: "",
-      finalSummary: ""
-    });
+//     const newVideo = folder.videos.create({
+//       originalName: videoName,
+//       videoUrl,
+//       detectedFrames: [],
+//       timeline: [],
+//       shortSummary: "",
+//       finalSummary: ""
+//     });
 
-    folder.videos.push(newVideo);
-    await folder.save();
+//     folder.videos.push(newVideo);
+//     await folder.save();
 
-    res.json({
-      message: "Video added",
-      videoId: newVideo._id
-    });
+//     res.json({
+//       message: "Video added",
+//       videoId: newVideo._id
+//     });
 
-  } catch (err) {
-    res.status(500).json({ error: "Failed to add video" });
-  }
-});
+//   } catch (err) {
+//     res.status(500).json({ error: "Failed to add video" });
+//   }
+// });
 
 
 
@@ -382,38 +382,119 @@ app.post("/api/add-video-to-folder", async (req, res) => {
 
 
 
+
 app.post("/api/push-frame", async (req, res) => {
   try {
-    const { folderId, videoId, timestamp, duration, imageUrl, shortSummary } = req.body;
+    console.log("📩 Frame received:", req.body);
 
-    if (!folderId || !videoId) {
-      return res.status(400).json({ error: "folderId and videoId are required" });
+    let { mode, folderId, videoId, timestamp, duration, imageUrl, shortSummary } = req.body;
+
+    let folder;
+
+    // -------------------------------------------------------
+    // CASE 1: mode === "init" → Create Folder & Video once
+    // -------------------------------------------------------
+    if (mode === "init") {
+      console.log("🆕 INIT MODE → Creating Folder + Video");
+
+      folder = await Folder.create({
+        name: "Auto Folder - " + new Date().toLocaleString(),
+        description: "Auto-created",
+        videos: []
+      });
+
+      const newVid = folder.videos.create({
+        originalName: "video.mp4",
+        videoUrl: "N/A",
+        duration: "",
+        finalSummary: "",
+        detectedFrames: []
+      });
+
+      folder.videos.push(newVid);
+      await folder.save();
+
+      return res.json({
+        message: "Initialization successful",
+        folderId: folder._id,
+        videoId: newVid._id
+      });
     }
 
-    const folder = await Folder.findById(folderId);
+    // -------------------------------------------------------
+    // CASE 2: mode === "frame" → Add frame into same video
+    // -------------------------------------------------------
+    folder = await Folder.findById(folderId);
     if (!folder) return res.status(404).json({ error: "Folder not found" });
 
     const video = folder.videos.id(videoId);
     if (!video) return res.status(404).json({ error: "Video not found" });
 
-    const newFrame = { timestamp, duration, imageUrl, shortSummary };
-    video.detectedFrames.push(newFrame);
+    // Insert frame
+    const newFrame = {
+      timestamp,
+      duration,
+      imageUrl,
+      shortSummary,
+    };
 
+    video.detectedFrames.push(newFrame);
     await folder.save();
 
     broadcast({
       type: "NEW_FRAME",
       folderId,
       videoId,
-      frame: newFrame,
+      frame: newFrame
     });
 
-    res.json({ message: "Frame saved successfully", frame: newFrame });
+    res.json({
+      message: "Frame saved",
+      frame: newFrame
+    });
 
   } catch (err) {
+    console.error("❌ Frame Save Error:", err);
     res.status(500).json({ error: "Failed to save frame" });
   }
 });
+
+
+
+
+
+// app.post("/api/push-frame", async (req, res) => {
+//   try {
+//     const { folderId, videoId, timestamp, duration, imageUrl, shortSummary } = req.body;
+
+//     if (!folderId || !videoId) {
+//       return res.status(400).json({ error: "folderId and videoId are required" });
+//     }
+
+//     const folder = await Folder.findById(folderId);
+//     if (!folder) return res.status(404).json({ error: "Folder not found" });
+
+//     const video = folder.videos.id(videoId);
+//     if (!video) return res.status(404).json({ error: "Video not found" });
+
+//     const newFrame = { timestamp, duration, imageUrl, shortSummary };
+//     video.detectedFrames.push(newFrame);
+
+//     await folder.save();
+
+//     broadcast({
+//       type: "NEW_FRAME",
+//       folderId,
+//       videoId,
+//       frame: newFrame,
+//     });
+
+//     res.json({ message: "Frame saved successfully", frame: newFrame });
+
+//   } catch (err) {
+//     res.status(500).json({ error: "Failed to save frame" });
+//   }
+// });
 
 
 

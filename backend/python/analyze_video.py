@@ -357,6 +357,320 @@ This script:
  - posts analysis completion to /api/analysis-complete
 """
 
+# import sys
+# import os
+# import time
+# import uuid
+# import json
+# import base64
+# import threading
+# import requests
+# import asyncio
+# import websockets
+
+# import cv2
+
+# # Optional, comment if you don't use YOLO
+# try:
+#     from ultralytics import YOLO
+#     YOLO_AVAILABLE = True
+# except Exception:
+#     YOLO_AVAILABLE = False
+
+# # Cloudinary
+# import cloudinary
+# import cloudinary.uploader
+
+# # Gemini/genai (Google)
+# # If you don't have this package or key, comment out summarize_from_bytes and use a stub.
+# try:
+#     from google import genai
+#     GENAI_AVAILABLE = True
+# except Exception:
+#     GENAI_AVAILABLE = False
+
+# # -------------------------
+# # CONFIG — change to env vars if needed
+# # -------------------------
+# BACKEND_URL = "http://localhost:5000"            # your Node backend
+# PUSH_FRAME_ENDPOINT = f"{BACKEND_URL}/api/push-frame"
+# ANALYSIS_COMPLETE_ENDPOINT = f"{BACKEND_URL}/api/analysis-complete"
+# WS_URL = "ws://localhost:8080"
+
+# CLOUDINARY_CLOUD = "dprwjya79"
+# CLOUDINARY_API_KEY = "623441469282272"
+# CLOUDINARY_API_SECRET = "paiJZ5_PRNSQl3SnBWk-S7a1K98"
+# CLOUDINARY_FOLDER = "events/"
+
+# # Gemini/genai
+# GENAI_API_KEY = "AIzaSyDPw29SEBG0obOPW42dFPEPAi76FqWpNm4"  # change or move to env
+
+# # Processing
+# FRAME_SKIP = 15  # every 5th frame
+# THROTTLE_SECONDS = 0.15  # small delay between uploads to avoid bursts
+# # -------------------------
+
+# # Init Cloudinary
+# cloudinary.config(
+#     cloud_name=CLOUDINARY_CLOUD,
+#     api_key=CLOUDINARY_API_KEY,
+#     api_secret=CLOUDINARY_API_SECRET
+# )
+
+# # Init genai client if available
+# if GENAI_AVAILABLE:
+#     client = genai.Client(api_key=GENAI_API_KEY)
+
+# # Init YOLO if available
+# if YOLO_AVAILABLE:
+#     try:
+#         model = YOLO("yolov8n.pt")  # ensure model file exists or adjust
+#     except Exception as e:
+#         print("⚠️ YOLO init failed:", e)
+#         YOLO_AVAILABLE = False
+# else:
+#     model = None
+
+# # -------------------------
+# # Helpers
+# # -------------------------
+# def format_time_hhmmss(seconds):
+#     return time.strftime('%H:%M:%S', time.gmtime(seconds))
+
+# def format_duration(seconds):
+#     if seconds is None:
+#         return "0s"
+#     if int(seconds) == seconds:
+#         return f"{int(seconds)}s"
+#     return f"{round(seconds,1)}s"
+
+# def upload_frame_to_cloudinary(frame_bgr):
+#     """
+#     frame_bgr: OpenCV BGR numpy array
+#     returns: (uid, secure_url, img_bytes) or (None, None, None)
+#     """
+#     try:
+#         ret, buf = cv2.imencode('.jpg', frame_bgr, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
+#         if not ret:
+#             return None, None, None
+#         img_bytes = buf.tobytes()
+#         uid = str(uuid.uuid4())
+#         res = cloudinary.uploader.upload(
+#             img_bytes,
+#             folder=CLOUDINARY_FOLDER,
+#             public_id=uid,
+#             resource_type="image"
+#         )
+#         return uid, res.get("secure_url"), img_bytes
+#     except Exception as e:
+#         print("❌ Cloudinary upload error:", e)
+#         return None, None, None
+
+# def summarize_from_bytes(img_bytes):
+#     """
+#     Best-effort 4-5 word summary using Gemini/genai.
+#     If genai not available, return a simple placeholder.
+#     """
+#     if not GENAI_AVAILABLE:
+#         return "Activity detected"
+
+#     try:
+#         img_b64 = base64.b64encode(img_bytes).decode("utf-8")
+#         result = client.models.generate_content(
+#             model="models/gemini-2.0-flash-lite",
+#             contents=[{
+#                 "role": "user",
+#                 "parts": [
+#                     {"text": "Give a CCTV-style short summary of this image in 4-5 words. Focus on suspicious activities, movements, or objects."},
+#                     {"inline_data": {"mime_type": "image/jpeg", "data": img_b64}}
+#                 ]
+#             }],
+#         )
+#         text = (result.text or "").strip()
+#         if not text:
+#             return "Activity detected"
+#         words = text.split()
+#         if 3 <= len(words) <= 5:
+#             return " ".join(words)
+#         return " ".join(words[:5])
+#     except Exception as e:
+#         print("❌ Gemini/genai error:", e)
+#         return "Movement detected"
+
+# # Websocket sending in separate thread
+# async def _ws_send(payload):
+#     try:
+#         async with websockets.connect(WS_URL) as ws:
+#             await ws.send(json.dumps(payload))
+#     except Exception as e:
+#         print("❌ WebSocket send error:", e)
+
+# def send_ws(payload):
+#     try:
+#         threading.Thread(target=lambda: asyncio.new_event_loop().run_until_complete(_ws_send(payload)), daemon=True).start()
+#     except Exception as e:
+#         print("❌ WS thread start error:", e)
+
+# def post_frame_to_backend(folder_id, video_id, timestamp, duration, image_url, short_summary):
+#     payload = {
+#         "folderId": folder_id,
+#         "videoId": video_id,
+#         "timestamp": timestamp,
+#         "duration": duration,
+#         "imageUrl": image_url,
+#         "shortSummary": short_summary
+#     }
+#     try:
+#         resp = requests.post(PUSH_FRAME_ENDPOINT, json=payload, timeout=15)
+#         if resp.status_code in (200, 201):
+#             # broadcast to WS as well (backend may broadcast too, but we send immediate event)
+#             send_ws({"type": "NEW_FRAME", "frame": payload, "folderId": folder_id, "videoId": video_id})
+#             print("✅ Pushed frame to backend:", timestamp, short_summary)
+#             return True
+#         else:
+#             print("❌ Backend push failed:", resp.status_code, resp.text)
+#             return False
+#     except Exception as e:
+#         print("❌ Error posting to backend:", e)
+#         return False
+
+# # -------------------------
+# # Main analysis
+# # -------------------------
+# def analyze_video(video_path, folder_id=None, video_id=None):
+#     if not os.path.exists(video_path):
+#         print("❌ Video path not found:", video_path)
+#         return
+
+#     print("🎬 Starting analysis for:", video_path)
+#     cap = cv2.VideoCapture(video_path)
+#     if not cap.isOpened():
+#         print("❌ Could not open video")
+#         return
+
+#     fps = cap.get(cv2.CAP_PROP_FPS) or 0.0
+#     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+#     duration_seconds = total_frames / fps if fps > 0 else 0
+#     sample_interval = FRAME_SKIP
+#     sample_interval_seconds = (FRAME_SKIP / fps) if fps > 0 else 0
+
+#     print(f"📊 FPS: {fps:.2f}, total_frames: {total_frames}, duration: {duration_seconds:.2f}s")
+#     print(f"🔁 Sampling every {FRAME_SKIP} frames (~{sample_interval_seconds:.2f}s)")
+
+#     frame_count = 0
+#     processed = 0
+
+#     try:
+#         while True:
+#             ret, frame = cap.read()
+#             if not ret:
+#                 break
+#             frame_count += 1
+
+#             # process every FRAME_SKIP-th frame
+#             if frame_count % sample_interval != 0:
+#                 continue
+
+#             current_frame_index = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+#             current_time_sec = current_frame_index / fps if fps > 0 else 0.0
+#             timestamp = format_time_hhmmss(current_time_sec)
+#             duration = format_duration(sample_interval_seconds)
+
+#             print(f"\n🔎 Sample #{processed+1} - frame {current_frame_index} @ {timestamp}")
+
+#             annotated = frame.copy()
+
+#             # YOLO detection (optional)
+#             objects = set()
+#             if YOLO_AVAILABLE and model is not None:
+#                 try:
+#                     results = model(frame)
+#                     if results and results[0] is not None:
+#                         annotated = results[0].plot()  # annotated image
+#                         if results[0].boxes is not None:
+#                             for box in results[0].boxes:
+#                                 # may need `.cls` property depending on ultralytics version
+#                                 try:
+#                                     cid = int(box.cls)
+#                                     name = model.names[cid] if hasattr(model, "names") else str(cid)
+#                                     objects.add(name)
+#                                 except Exception:
+#                                     pass
+#                 except Exception as e:
+#                     print("⚠️ YOLO inference error:", e)
+#                     annotated = frame.copy()
+
+#             # upload annotated frame
+#             uid, image_url, img_bytes = upload_frame_to_cloudinary(annotated)
+#             if not image_url:
+#                 print("⚠️ Skipping frame, cloud upload failed")
+#                 continue
+
+#             # get short summary
+#             short_summary = summarize_from_bytes(img_bytes)
+#             # ensure 4-5 words max
+#             sw = short_summary.split()
+#             if len(sw) > 5:
+#                 short_summary = " ".join(sw[:5])
+
+#             # post to backend
+#             success = post_frame_to_backend(folder_id, video_id, timestamp, duration, image_url, short_summary)
+#             if success:
+#                 processed += 1
+
+#             time.sleep(THROTTLE_SECONDS)
+
+#             # progress logging
+#             if processed % 20 == 0 and processed > 0:
+#                 progress_pct = (current_frame_index / total_frames * 100) if total_frames > 0 else 0
+#                 print(f"📈 Processed {processed} frames — progress: {progress_pct:.1f}%")
+
+#     except KeyboardInterrupt:
+#         print("⏹️ Analysis interrupted by user")
+#     except Exception as e:
+#         print("❌ Analysis error:", e)
+#     finally:
+#         cap.release()
+
+#     # send analysis complete to backend
+#     complete_payload = {
+#         "videoId": video_id,
+#         "videoName": os.path.basename(video_path),
+#         "totalSamples": processed,
+#         "videoDuration": f"{duration_seconds:.2f}s",
+#         "completedAt": time.strftime('%Y-%m-%d %H:%M:%S')
+#     }
+#     try:
+#         r = requests.post(ANALYSIS_COMPLETE_ENDPOINT, json=complete_payload, timeout=10)
+#         if r.status_code in (200,201):
+#             print("💾 Analysis completion stored in backend")
+#         else:
+#             print("⚠️ Analysis-complete store failed:", r.status_code, r.text)
+#     except Exception as e:
+#         print("❌ Error posting analysis-complete:", e)
+
+#     # also send complete event on websocket
+#     send_ws({"type": "ANALYSIS_COMPLETE", "data": complete_payload})
+
+#     print(f"🎉 Analysis finished — total frames pushed: {processed}")
+
+# # -------------------------
+# # CLI entry
+# # -------------------------
+# if __name__ == "__main__":
+#     if len(sys.argv) < 2:
+#         print("Usage: python analyze_video.py /path/to/video.mp4 [folderId] [videoId]")
+#         sys.exit(1)
+
+#     video_path = sys.argv[1]
+#     folder_id = sys.argv[2] if len(sys.argv) > 2 else None
+#     video_id = sys.argv[3] if len(sys.argv) > 3 else None
+
+#     analyze_video(video_path, folder_id, video_id)
+
+
+
+
 import sys
 import os
 import time
@@ -370,7 +684,7 @@ import websockets
 
 import cv2
 
-# Optional, comment if you don't use YOLO
+# Optional YOLO
 try:
     from ultralytics import YOLO
     YOLO_AVAILABLE = True
@@ -381,8 +695,7 @@ except Exception:
 import cloudinary
 import cloudinary.uploader
 
-# Gemini/genai (Google)
-# If you don't have this package or key, comment out summarize_from_bytes and use a stub.
+# Gemini
 try:
     from google import genai
     GENAI_AVAILABLE = True
@@ -390,10 +703,14 @@ except Exception:
     GENAI_AVAILABLE = False
 
 # -------------------------
-# CONFIG — change to env vars if needed
+# CONFIG
 # -------------------------
-BACKEND_URL = "http://localhost:5000"            # your Node backend
+BACKEND_URL = "http://localhost:5000"
 PUSH_FRAME_ENDPOINT = f"{BACKEND_URL}/api/push-frame"
+
+# --- NEW ENDPOINT ONLY FOR INIT ---
+INIT_VIDEO_ENDPOINT = f"{BACKEND_URL}/api/init-video"
+
 ANALYSIS_COMPLETE_ENDPOINT = f"{BACKEND_URL}/api/analysis-complete"
 WS_URL = "ws://localhost:8080"
 
@@ -402,55 +719,77 @@ CLOUDINARY_API_KEY = "623441469282272"
 CLOUDINARY_API_SECRET = "paiJZ5_PRNSQl3SnBWk-S7a1K98"
 CLOUDINARY_FOLDER = "events/"
 
-# Gemini/genai
-GENAI_API_KEY = "AIzaSyDPw29SEBG0obOPW42dFPEPAi76FqWpNm4"  # change or move to env
+GENAI_API_KEY = "AIzaSyDPw29SEBG0obOPW42dFPEPAi76FqWpNm4"
 
-# Processing
-FRAME_SKIP = 15  # every 5th frame
-THROTTLE_SECONDS = 0.15  # small delay between uploads to avoid bursts
+FRAME_SKIP = 15
+THROTTLE_SECONDS = 0.15
 # -------------------------
 
-# Init Cloudinary
 cloudinary.config(
     cloud_name=CLOUDINARY_CLOUD,
     api_key=CLOUDINARY_API_KEY,
     api_secret=CLOUDINARY_API_SECRET
 )
 
-# Init genai client if available
 if GENAI_AVAILABLE:
     client = genai.Client(api_key=GENAI_API_KEY)
 
-# Init YOLO if available
 if YOLO_AVAILABLE:
     try:
-        model = YOLO("yolov8n.pt")  # ensure model file exists or adjust
-    except Exception as e:
-        print("⚠️ YOLO init failed:", e)
+        model = YOLO("yolov8n.pt")
+    except Exception:
         YOLO_AVAILABLE = False
-else:
-    model = None
 
-# -------------------------
-# Helpers
-# -------------------------
-def format_time_hhmmss(seconds):
-    return time.strftime('%H:%M:%S', time.gmtime(seconds))
-
-def format_duration(seconds):
-    if seconds is None:
-        return "0s"
-    if int(seconds) == seconds:
-        return f"{int(seconds)}s"
-    return f"{round(seconds,1)}s"
-
-def upload_frame_to_cloudinary(frame_bgr):
+# ---------------------------------------------------------
+# Helper: INIT CALL – Creates folder & video only ONCE
+# ---------------------------------------------------------
+def init_video_on_backend():
     """
-    frame_bgr: OpenCV BGR numpy array
-    returns: (uid, secure_url, img_bytes) or (None, None, None)
+    Calls backend in INIT mode → gets folderId & videoId.
     """
     try:
-        ret, buf = cv2.imencode('.jpg', frame_bgr, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
+        payload = {"mode": "init"}
+        resp = requests.post(PUSH_FRAME_ENDPOINT, json=payload)
+        data = resp.json()
+
+        print("🆕 INIT RESPONSE:", data)
+        return data["folderId"], data["videoId"]
+    except Exception as e:
+        print("❌ INIT error:", e)
+        return None, None
+
+# -------------------------
+# Helper: Push one frame
+# -------------------------
+def post_frame(folder_id, video_id, timestamp, duration, image_url, summary):
+    payload = {
+        "mode": "frame",
+        "folderId": folder_id,
+        "videoId": video_id,
+        "timestamp": timestamp,
+        "duration": duration,
+        "imageUrl": image_url,
+        "shortSummary": summary,
+    }
+
+    try:
+        resp = requests.post(PUSH_FRAME_ENDPOINT, json=payload)
+        if resp.status_code in (200, 201):
+            print("✅ Frame pushed:", timestamp)
+            return True
+        else:
+            print("❌ Push failed:", resp.text)
+            return False
+    except Exception as e:
+        print("❌ Push error:", e)
+        return False
+
+# -------------------------
+# Upload image
+# -------------------------
+def upload_frame_to_cloudinary(frame_bgr):
+    try:
+        ret, buf = cv2.imencode('.jpg', frame_bgr)
         if not ret:
             return None, None, None
         img_bytes = buf.tobytes()
@@ -463,14 +802,13 @@ def upload_frame_to_cloudinary(frame_bgr):
         )
         return uid, res.get("secure_url"), img_bytes
     except Exception as e:
-        print("❌ Cloudinary upload error:", e)
+        print("❌ Cloudinary error:", e)
         return None, None, None
 
+# -------------------------
+# Short summary using Gemini
+# -------------------------
 def summarize_from_bytes(img_bytes):
-    """
-    Best-effort 4-5 word summary using Gemini/genai.
-    If genai not available, return a simple placeholder.
-    """
     if not GENAI_AVAILABLE:
         return "Activity detected"
 
@@ -481,189 +819,95 @@ def summarize_from_bytes(img_bytes):
             contents=[{
                 "role": "user",
                 "parts": [
-                    {"text": "Give a CCTV-style short summary of this image in 4-5 words. Focus on suspicious activities, movements, or objects."},
+                    {"text": "Give a CCTV-style short summary in 4-5 words."},
                     {"inline_data": {"mime_type": "image/jpeg", "data": img_b64}}
                 ]
             }],
         )
-        text = (result.text or "").strip()
-        if not text:
-            return "Activity detected"
+        text = result.text.strip()
         words = text.split()
-        if 3 <= len(words) <= 5:
-            return " ".join(words)
         return " ".join(words[:5])
-    except Exception as e:
-        print("❌ Gemini/genai error:", e)
-        return "Movement detected"
-
-# Websocket sending in separate thread
-async def _ws_send(payload):
-    try:
-        async with websockets.connect(WS_URL) as ws:
-            await ws.send(json.dumps(payload))
-    except Exception as e:
-        print("❌ WebSocket send error:", e)
-
-def send_ws(payload):
-    try:
-        threading.Thread(target=lambda: asyncio.new_event_loop().run_until_complete(_ws_send(payload)), daemon=True).start()
-    except Exception as e:
-        print("❌ WS thread start error:", e)
-
-def post_frame_to_backend(folder_id, video_id, timestamp, duration, image_url, short_summary):
-    payload = {
-        "folderId": folder_id,
-        "videoId": video_id,
-        "timestamp": timestamp,
-        "duration": duration,
-        "imageUrl": image_url,
-        "shortSummary": short_summary
-    }
-    try:
-        resp = requests.post(PUSH_FRAME_ENDPOINT, json=payload, timeout=15)
-        if resp.status_code in (200, 201):
-            # broadcast to WS as well (backend may broadcast too, but we send immediate event)
-            send_ws({"type": "NEW_FRAME", "frame": payload, "folderId": folder_id, "videoId": video_id})
-            print("✅ Pushed frame to backend:", timestamp, short_summary)
-            return True
-        else:
-            print("❌ Backend push failed:", resp.status_code, resp.text)
-            return False
-    except Exception as e:
-        print("❌ Error posting to backend:", e)
-        return False
+    except:
+        return "Activity detected"
 
 # -------------------------
-# Main analysis
+# Time formatting
 # -------------------------
-def analyze_video(video_path, folder_id=None, video_id=None):
-    if not os.path.exists(video_path):
-        print("❌ Video path not found:", video_path)
-        return
+def format_time_hhmmss(sec):
+    return time.strftime('%H:%M:%S', time.gmtime(sec))
 
-    print("🎬 Starting analysis for:", video_path)
-    cap = cv2.VideoCapture(video_path)
+def format_duration(sec):
+    return f"{round(sec,1)}s"
+
+# -------------------------
+# MAIN ANALYSIS
+# -------------------------
+def analyze_video(path):
+    print("🎬 ANALYZING:", path)
+
+    cap = cv2.VideoCapture(path)
     if not cap.isOpened():
-        print("❌ Could not open video")
+        print("❌ Cannot open video")
         return
 
-    fps = cap.get(cv2.CAP_PROP_FPS) or 0.0
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
-    duration_seconds = total_frames / fps if fps > 0 else 0
-    sample_interval = FRAME_SKIP
-    sample_interval_seconds = (FRAME_SKIP / fps) if fps > 0 else 0
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    interval = FRAME_SKIP
 
-    print(f"📊 FPS: {fps:.2f}, total_frames: {total_frames}, duration: {duration_seconds:.2f}s")
-    print(f"🔁 Sampling every {FRAME_SKIP} frames (~{sample_interval_seconds:.2f}s)")
+    # ---- NEW LOGIC ----
+    # Perform INIT ONLY once at video start
+    folder_id, video_id = init_video_on_backend()
 
-    frame_count = 0
-    processed = 0
+    if not folder_id or not video_id:
+        print("❌ Cannot continue without folder/video ID")
+        return
 
-    try:
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                break
-            frame_count += 1
+    frame_idx = 0
+    pushed = 0
 
-            # process every FRAME_SKIP-th frame
-            if frame_count % sample_interval != 0:
-                continue
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        frame_idx += 1
 
-            current_frame_index = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
-            current_time_sec = current_frame_index / fps if fps > 0 else 0.0
-            timestamp = format_time_hhmmss(current_time_sec)
-            duration = format_duration(sample_interval_seconds)
+        if frame_idx % interval != 0:
+            continue
 
-            print(f"\n🔎 Sample #{processed+1} - frame {current_frame_index} @ {timestamp}")
+        current_frame = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+        ts = current_frame / fps
 
-            annotated = frame.copy()
+        timestamp = format_time_hhmmss(ts)
+        duration = format_duration(interval / fps)
 
-            # YOLO detection (optional)
-            objects = set()
-            if YOLO_AVAILABLE and model is not None:
-                try:
-                    results = model(frame)
-                    if results and results[0] is not None:
-                        annotated = results[0].plot()  # annotated image
-                        if results[0].boxes is not None:
-                            for box in results[0].boxes:
-                                # may need `.cls` property depending on ultralytics version
-                                try:
-                                    cid = int(box.cls)
-                                    name = model.names[cid] if hasattr(model, "names") else str(cid)
-                                    objects.add(name)
-                                except Exception:
-                                    pass
-                except Exception as e:
-                    print("⚠️ YOLO inference error:", e)
-                    annotated = frame.copy()
+        # Optional YOLO
+        annotated = frame.copy()
+        if YOLO_AVAILABLE:
+            try:
+                result = model(frame)
+                annotated = result[0].plot()
+            except:
+                annotated = frame.copy()
 
-            # upload annotated frame
-            uid, image_url, img_bytes = upload_frame_to_cloudinary(annotated)
-            if not image_url:
-                print("⚠️ Skipping frame, cloud upload failed")
-                continue
+        uid, img_url, img_bytes = upload_frame_to_cloudinary(annotated)
+        if not img_url:
+            continue
 
-            # get short summary
-            short_summary = summarize_from_bytes(img_bytes)
-            # ensure 4-5 words max
-            sw = short_summary.split()
-            if len(sw) > 5:
-                short_summary = " ".join(sw[:5])
+        summary = summarize_from_bytes(img_bytes)
 
-            # post to backend
-            success = post_frame_to_backend(folder_id, video_id, timestamp, duration, image_url, short_summary)
-            if success:
-                processed += 1
+        post_frame(folder_id, video_id, timestamp, duration, img_url, summary)
+        pushed += 1
+        time.sleep(THROTTLE_SECONDS)
 
-            time.sleep(THROTTLE_SECONDS)
-
-            # progress logging
-            if processed % 20 == 0 and processed > 0:
-                progress_pct = (current_frame_index / total_frames * 100) if total_frames > 0 else 0
-                print(f"📈 Processed {processed} frames — progress: {progress_pct:.1f}%")
-
-    except KeyboardInterrupt:
-        print("⏹️ Analysis interrupted by user")
-    except Exception as e:
-        print("❌ Analysis error:", e)
-    finally:
-        cap.release()
-
-    # send analysis complete to backend
-    complete_payload = {
-        "videoId": video_id,
-        "videoName": os.path.basename(video_path),
-        "totalSamples": processed,
-        "videoDuration": f"{duration_seconds:.2f}s",
-        "completedAt": time.strftime('%Y-%m-%d %H:%M:%S')
-    }
-    try:
-        r = requests.post(ANALYSIS_COMPLETE_ENDPOINT, json=complete_payload, timeout=10)
-        if r.status_code in (200,201):
-            print("💾 Analysis completion stored in backend")
-        else:
-            print("⚠️ Analysis-complete store failed:", r.status_code, r.text)
-    except Exception as e:
-        print("❌ Error posting analysis-complete:", e)
-
-    # also send complete event on websocket
-    send_ws({"type": "ANALYSIS_COMPLETE", "data": complete_payload})
-
-    print(f"🎉 Analysis finished — total frames pushed: {processed}")
+    cap.release()
+    print("🎉 COMPLETED. Frames pushed:", pushed)
 
 # -------------------------
-# CLI entry
+# ENTRY POINT
 # -------------------------
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python analyze_video.py /path/to/video.mp4 [folderId] [videoId]")
-        sys.exit(1)
+        print("Usage: python script.py video.mp4")
+        sys.exit()
 
-    video_path = sys.argv[1]
-    folder_id = sys.argv[2] if len(sys.argv) > 2 else None
-    video_id = sys.argv[3] if len(sys.argv) > 3 else None
-
-    analyze_video(video_path, folder_id, video_id)
+    analyze_video(sys.argv[1])
