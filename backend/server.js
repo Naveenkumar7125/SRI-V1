@@ -383,6 +383,25 @@ app.post("/api/upload-video", async (req, res) => {
 
 
 
+
+app.get("/api/folders", async (req, res) => {
+  try {
+    const folders = await Folder.find()
+      .select("name videos")   // return folder name + videos
+      .lean();
+
+    res.json({ folders });
+  } catch (err) {
+    console.error("❌ Fetch folders error:", err);
+    res.status(500).json({ error: "Failed to fetch folders" });
+  }
+});
+
+
+
+
+
+
 app.post("/api/push-frame", async (req, res) => {
   try {
     console.log("📩 Frame received:", req.body);

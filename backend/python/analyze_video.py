@@ -48,7 +48,7 @@
 # # ------------------------------
 # # GEMINI CONFIG (genai client)
 # # ------------------------------
-# API_KEY = "AIzaSyDPw29SEBG0obOPW42dFPEPAi76FqWpNm4"
+# API_KEY = "API"
 # client = genai.Client(api_key=API_KEY)
 
 # # ------------------------------
@@ -403,7 +403,7 @@ This script:
 # CLOUDINARY_FOLDER = "events/"
 
 # # Gemini/genai
-# GENAI_API_KEY = "AIzaSyDPw29SEBG0obOPW42dFPEPAi76FqWpNm4"  # change or move to env
+# GENAI_API_KEY = "API"  # change or move to env
 
 # # Processing
 # FRAME_SKIP = 15  # every 5th frame
@@ -684,6 +684,9 @@ import websockets
 
 import cv2
 
+
+load_dotenv()
+
 # Optional YOLO
 try:
     from ultralytics import YOLO
@@ -719,7 +722,7 @@ CLOUDINARY_API_KEY = "623441469282272"
 CLOUDINARY_API_SECRET = "paiJZ5_PRNSQl3SnBWk-S7a1K98"
 CLOUDINARY_FOLDER = "events/"
 
-GENAI_API_KEY = "AIzaSyDPw29SEBG0obOPW42dFPEPAi76FqWpNm4"
+GENAI_API_KEY = os.environ.get("API_KEY")
 
 FRAME_SKIP = 15
 THROTTLE_SECONDS = 0.15

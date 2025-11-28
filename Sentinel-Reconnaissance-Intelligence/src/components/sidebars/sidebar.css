@@ -245,3 +245,34 @@
     width: 64px; /* icon-only mode */
   }
 }
+
+
+
+.hover-panel {
+  position: absolute;
+  left: 220px;
+  top: 0;
+  background: #0f0f0f;
+  border: 1px solid #232323;
+  padding: 8px 12px;
+  border-radius: 6px;
+  z-index: 999;
+  width: 220px;
+}
+
+.hover-video-item {
+  padding: 6px 10px;
+  font-size: 14px;
+  color: #ccc;
+  cursor: pointer;
+}
+
+.hover-video-item:hover {
+  background: #1b1b1b;
+  color: white;
+}
+
+.hover-video-item.empty {
+  color: #777;
+  font-style: italic;
+}

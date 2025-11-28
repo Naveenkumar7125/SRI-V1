@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./Sidebar.css";
 
+import axios from "axios";
+
 const menuItems = [
   { key: "dashboard", label: "Command Center", icon: "command" },
   { key: "upload", label: "Report Generator", icon: "report" },
@@ -34,11 +36,36 @@ const recentReports = [
   "Masked person detected – Zone 9",
 ];
 
+
+
+
+
 const Sidebar = ({ onSelect }) => {
   const [active, setActive] = useState("dashboard");
+  const [folders, setFolders] = useState([]);     // ⭐ REQUIRED
+const [hoverFolder, setHoverFolder] = useState(null);  // ⭐ REQUIRED
+
 
   const navigate = useNavigate();
   const location = useLocation();
+  
+
+
+  
+
+// FETCH FOLDERS FROM BACKEND
+useEffect(() => {
+  const fetchFolders = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/folders");
+      setFolders(res.data.folders || []);
+    } catch (err) {
+      console.error("❌ Fetch folders error:", err);
+    }
+  };
+
+  fetchFolders();
+}, []);
 
   // Sync active item with current URL
   useEffect(() => {
@@ -112,23 +139,48 @@ const Sidebar = ({ onSelect }) => {
       </nav>
 
       {/* Recent reports – fills remaining height & is scrollable */}
-      <section className="recent-reports">
-        <h3 className="recent-header">Recent reports</h3>
-        <div className="recent-list">
-          {recentReports.map((item, idx) => (
-            <button
-              key={idx}
-              type="button"
-              className="recent-item"
-              title={item}
-              onClick={() => handleRecentClick(item)}
-            >
-              <span className="recent-text">{item}</span>
-              <span className="recent-arrow">›</span>
-            </button>
-          ))}
-        </div>
-      </section>
+      {/* Folders from Backend */}
+<section className="recent-reports">
+  <h3 className="recent-header">Folders</h3>
+
+  <div className="recent-list">
+    {folders.map((folder) => (
+      <div
+        key={folder._id}
+        className="recent-item"
+        onMouseEnter={() => setHoverFolder(folder._id)}
+        onMouseLeave={() => setHoverFolder(null)}
+        onClick={() => navigate(`/cases?folder=${folder._id}`)}
+      >
+        <span className="recent-text">{folder.name}</span>
+        <span className="recent-arrow">›</span>
+
+        {/* Show videos on hover */}
+        {hoverFolder === folder._id && (
+          <div className="hover-panel">
+            {folder.videos.length === 0 ? (
+              <div className="hover-video-item empty">No videos</div>
+            ) : (
+              folder.videos.map((v) => (
+                <div
+                  key={v._id}
+                  className="hover-video-item"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/live?video=${v._id}`);
+                  }}
+                >
+                  {v.originalName}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+</section>
+
 
       {/* Status Footer at very bottom */}
       <div className="status">
