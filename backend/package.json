@@ -16,8 +16,12 @@
     "express": "^5.1.0",
     "express-fileupload": "^1.5.2",
     "fs": "^0.0.1-security",
+    "http": "^0.0.1-security",
     "mongoose": "^9.0.0",
+    "multer": "^2.0.2",
     "path": "^0.12.7",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
     "ws": "^8.18.3"
   }
 }

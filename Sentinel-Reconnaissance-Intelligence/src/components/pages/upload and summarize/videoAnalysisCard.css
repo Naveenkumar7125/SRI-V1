@@ -1,0 +1,381 @@
+/* ===========================================
+   VIDEO ANALYSIS CARD — FINAL CLEAN VERSION
+=========================================== */
+
+.analysis-result-card {
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  padding: 18px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+}
+
+
+/* ---------- Header ---------- */
+
+.analysis-result-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.analysis-result-left {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.analysis-result-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+  color: #0f172a;
+}
+
+.analysis-result-subtitle {
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.analysis-result-meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+
+/* ---------- Threat Pills ---------- */
+
+.pill {
+  padding: 5px 10px;
+  font-size: 0.72rem;
+  border-radius: 999px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.pill-danger {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+  border: 1px solid rgba(220, 38, 38, 0.35);
+}
+
+.pill-warning {
+  background: rgba(249, 115, 22, 0.1);
+  color: #c2410c;
+  border: 1px solid rgba(249, 115, 22, 0.35);
+}
+
+.pill-success {
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+  border: 1px solid rgba(22, 163, 74, 0.35);
+}
+
+.analysis-confidence {
+  font-size: 0.85rem;
+  color: #334155;
+}
+
+.report-btn {
+  padding: 6px 12px !important;
+}
+
+
+/* ---------- Grid Layout ---------- */
+
+.analysis-result-body {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 20px;
+}
+
+
+
+/* ---------- Timeline ---------- */
+
+.section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
+  color: #0f172a;
+}
+
+.timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.timeline-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  border-radius: 10px;
+  transition: 0.15s;
+}
+
+.timeline-row:hover {
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.timeline-time {
+  font-family: monospace;
+  font-size: 0.82rem;
+  color: #2563eb;
+  width: 80px;
+}
+
+.timeline-event {
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+
+/* ---------- Duration ---------- */
+
+.duration-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #1d4ed8;
+}
+
+
+
+/* ===========================================
+   SNAPSHOT CARD (WITH SCROLL ONLY INSIDE GRID)
+=========================================== */
+
+.snapshot-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  /* 👇 This forces scroll to activate */
+  min-height: 260px;
+  max-height: 260px;
+}
+
+.snapshot-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.snapshot-count {
+  font-size: 0.76rem;
+  color: #6b7280;
+}
+
+
+/* 👇 Only this area scrolls */
+.snapshot-frames-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 14px;
+}
+
+/* Scrollbar style */
+
+.snapshot-frames-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.snapshot-frames-container::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.85);
+  border-radius: 999px;
+}
+
+.snapshot-frames-container:hover::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.9);
+}
+
+
+/* ---------- Individual Frame ---------- */
+
+.snapshot-frame {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  box-shadow: 0px 4px 8px rgba(15, 23, 42, 0.08);
+}
+
+.snapshot-frame-image-wrapper {
+  aspect-ratio: 16 / 9;
+  background: #eef2ff;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.snapshot-frame-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.snapshot-frame-meta {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 8px;
+}
+
+.snapshot-frame-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.snapshot-frame-time {
+  font-size: 0.72rem;
+  color: #6b7280;
+}
+
+.snapshot-empty {
+  font-size: 0.8rem;
+  color: #6b7280;
+  padding-left: 4px;
+}
+
+
+
+/* ===========================================
+   SUMMARY + CHARTS
+=========================================== */
+
+.summary-panel {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 18px;
+}
+
+.summary-section {
+  margin-top: 12px;
+}
+
+.summary-subtitle {
+  font-size: 0.83rem;
+  font-weight: 600;
+}
+
+.summary-text {
+  font-size: 0.84rem;
+  line-height: 1.45rem;
+  color: #374151;
+}
+
+.summary-conclusion {
+  border-top: 1px dashed #cbd5e1;
+  padding-top: 8px;
+  margin-top: 10px;
+}
+
+
+
+/* ---------- Chart Styling ---------- */
+
+.summary-chart {
+  background: white;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  margin-top: 6px;
+  position: relative;
+  height: 145px;
+}
+
+.chart-grid-lines {
+  position: absolute;
+  inset: 12px 12px 28px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.chart-grid-line {
+  height: 1px;
+  background: rgba(203, 213, 225, 0.7);
+}
+
+.chart-bars {
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  padding-left: 10px;
+}
+
+.chart-bar-block {
+  text-align: center;
+}
+
+.chart-bar-outer {
+  width: 30px;
+  height: 100%;
+  background: #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: auto;
+  display: flex;
+  align-items: flex-end;
+}
+
+.chart-bar-fill {
+  width: 100%;
+  background: linear-gradient(180deg, #2563eb, rgba(37,99,235,0.2));
+}
+
+.chart-bar-highlight {
+  background: linear-gradient(180deg, #dc2626, rgba(220,38,38,0.25));
+}
+
+.chart-bar-value {
+  font-size: 0.75rem;
+  font-family: monospace;
+}
+
+.chart-bar-label {
+  font-size: 0.75rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.chart-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  color: #6b7280;
+}
+
+
+/* -------- Responsive -------- */
+
+@media (max-width: 850px) {
+  .analysis-result-body {
+    grid-template-columns: 1fr;
+  }
+
+  .snapshot-card {
+    max-height: 300px;
+  }
+}

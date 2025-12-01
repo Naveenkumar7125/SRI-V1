@@ -1,14 +1,14 @@
 /* ================== COLOURS / TOKENS ================== */
 
 :root {
-  --bg-page: #f8fafc;
+  --bg-page: #f9fafb;
   --bg-card: #ffffff;
-  --bg-muted: #f3f4f6;
+  --bg-muted: #eef2ff;
 
-  --border-soft: #d4dbe8;
+  --border-soft: #e2e8f0;
 
-  --text-main: #0b1120;
-  --text-muted: #6b7280;
+  --text-main: #0f172a;
+  --text-muted: #4b5563;
 
   --tactical: #2563eb;
   --tactical-soft: rgba(37, 99, 235, 0.08);
@@ -61,7 +61,7 @@
 }
 
 .upload-subtitle {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--text-muted);
   margin: 0;
 }
@@ -99,7 +99,7 @@
   background: var(--bg-card);
   border-radius: 24px !important;
   border: 1px solid #d0d7ee !important;
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
   padding: 28px 28px 24px 28px !important;
 }
 
@@ -113,17 +113,17 @@
 
 .upload-drop-box {
   border-radius: 18px;
-  border: 2px dashed rgba(148, 163, 184, 0.65);
+  border: 2px dashed rgba(148, 163, 184, 0.75);
   background: linear-gradient(
     135deg,
-    #f9fbff 0%,
-    rgba(239, 246, 255, 0.95) 100%
+    #ffffff 0%,
+    rgba(239, 246, 255, 0.96) 100%
   );
   padding: 24px 22px 20px 22px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  min-height: 240px;
+  min-height: 260px;
   justify-content: space-between;
 }
 
@@ -134,8 +134,8 @@
 }
 
 .upload-icon-circle {
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   border-radius: 999px;
   background: var(--tactical-soft);
   display: flex;
@@ -144,8 +144,8 @@
 }
 
 .upload-main-icon {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   color: var(--tactical);
 }
 
@@ -154,7 +154,7 @@
 }
 
 .upload-main-heading {
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 700;
   margin: 0 0 4px 0;
   color: var(--text-main);
@@ -195,6 +195,7 @@
 .upload-query-input input {
   font-size: 0.9rem;
   color: var(--text-main);
+  background: #ffffff;
 }
 
 .upload-query-input input::placeholder {
@@ -252,7 +253,7 @@
 
 .upload-status {
   background: #ffffff;
-  border: 1px solid rgba(148, 163, 184, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.8);
   border-radius: 16px;
   padding: 12px 12px 10px 12px;
   width: 100%;
@@ -694,7 +695,7 @@
 
 .snapshot-tile {
   position: relative;
-  background: var(--bg-muted);
+  background: #f3f4ff;
   aspect-ratio: 16 / 9;
   border-radius: 10px;
   border: 1px dashed rgba(148, 163, 184, 0.7);
@@ -787,7 +788,7 @@
   position: absolute !important;
   right: 8px;
   bottom: 8px;
-  background: rgba(15, 23, 42, 0.7) !important;
+  background: rgba(15, 23, 42, 0.8) !important;
   border-color: transparent !important;
   color: #ffffff !important;
   padding: 4px 8px !important;
@@ -886,12 +887,68 @@
     gap: 8px;
   }
 }
+/* Key Moment Snapshots – horizontal scroll with frames */
 
-
-
-.detected-preview-img {
-  width: 100%;
-  height: 140px;
-  object-fit: cover;
-  border-radius: 6px;
+.snapshot-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-top: 6px;
 }
+
+.snapshot-strip::-webkit-scrollbar {
+  height: 6px;
+}
+
+.snapshot-strip::-webkit-scrollbar-thumb {
+  background: var(--tactical-soft);
+  border-radius: 999px;
+}
+
+.snapshot-frame {
+  min-width: 150px;
+  max-width: 180px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.65);
+  box-shadow: 0 6px 10px rgba(15, 23, 42, 0.06);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.snapshot-frame-image-wrapper {
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-muted);
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.snapshot-frame-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.snapshot-frame-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.snapshot-frame-time {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.snapshot-empty {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+

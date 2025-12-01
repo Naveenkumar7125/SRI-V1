@@ -293,6 +293,272 @@
 
 
 // UploadArea.jsx
+// import React, { useRef, useState } from "react";
+// import { Card } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import { Input } from "@/components/ui/input";
+// import {
+//   Upload,
+//   FileVideo,
+//   Sparkles,
+//   FolderOpen,
+//   Trash2,
+//   X,
+//   Send,
+// } from "lucide-react";
+// import axios from "axios";
+
+// export default function UploadArea({
+//   uploadedFiles,
+//   setUploadedFiles,
+//   isAnalyzing,
+//   setIsAnalyzing,
+//   setAnalysisResults,
+//   setDetectedFrames,
+//   setShowAnalysis,
+// }) {
+//   const fileInputRef = useRef(null);
+//   const folderInputRef = useRef(null);
+//   const [userQuery, setUserQuery] = useState("");
+
+
+
+
+//   const uploadToBackend = async () => {
+//   if (!uploadedFiles.length) {
+//     console.warn("No files to upload");
+//     return;
+//   }
+
+//   const form = new FormData();
+
+//   // If the upload set contains folderName (folder upload), use that
+//   const first = uploadedFiles[0];
+//   const folderName = first.folderName || "";
+
+//   uploadedFiles.forEach((fileObj) => {
+//     // If you want to preserve relative paths, append them too
+//     form.append("files", fileObj.file);
+//   });
+
+//   if (folderName) form.append("folderName", folderName);
+
+//   try {
+//     const res = await fetch("http://localhost:5000/api/upload", {
+//       method: "POST",
+//       body: form,
+//     });
+
+//     const data = await res.json();
+//     console.log("UPLOAD RESPONSE:", data);
+//     if (!data.success) {
+//       alert("Upload failed: " + JSON.stringify(data));
+//     } else {
+//       alert(`Saved to ${data.storedAt}\nFiles: ${data.filesSaved.join(", ")}`);
+//     }
+//   } catch (err) {
+//     console.error("Upload error", err);
+//     alert("Upload failed, check console");
+//   }
+// };
+
+
+
+//   const folderId = "67b6b7e1d21f1fc80fb7cf92"; // TEMP — replace with dynamic folderId if needed
+
+//   const handleFileUpload = () => {
+//     if (fileInputRef.current) fileInputRef.current.click();
+//   };
+
+//   const handleFolderUpload = () => {
+//     if (folderInputRef.current) folderInputRef.current.click();
+//   };
+
+  
+
+//   const handleFolderChange = (event) => {
+//     const files = Array.from(event.target.files || []);
+
+//     const videoFiles = files
+//       .filter((file) => file.type.startsWith("video/"))
+//       .map((file) => ({
+//         name: file.name,
+//         size: file.size,
+//         type: file.type,
+//         previewURL: URL.createObjectURL(file),
+//         realFile: file,
+//       }));
+
+//     setUploadedFiles((prev) => [...prev, ...videoFiles]);
+//     event.target.value = "";
+//   };
+
+//   const deleteFile = (index) => {
+//     setUploadedFiles((prev) => {
+//       const newFiles = [...prev];
+//       URL.revokeObjectURL(newFiles[index].previewURL);
+//       newFiles.splice(index, 1);
+//       return newFiles;
+//     });
+//   };
+
+//   const clearAllFiles = () => {
+//     uploadedFiles.forEach((file) => URL.revokeObjectURL(file.previewURL));
+//     setUploadedFiles([]);
+//   };
+
+//   const formatFileSize = (bytes) => {
+//     const sizes = ["Bytes", "KB", "MB", "GB"];
+//     let i = Math.floor(Math.log(bytes) / Math.log(1024));
+//     return (bytes / Math.pow(1024, i)).toFixed(2) + " " + sizes[i];
+//   };
+
+//   // ⭐ Upload each video one-by-one to your backend
+//   // Run AI Analysis (upload all files)
+//   const analyzeFolder = async () => {
+//   if (!uploadedFiles.length) return;
+
+//   setIsAnalyzing(true);
+
+//   for (const file of uploadedFiles) {
+//     await uploadToBackend(file);
+//   }
+
+//   setIsAnalyzing(false);
+
+//   // ⭐ Automatically move to analysis view page
+//   setShowAnalysis(true);
+// };
+
+
+
+
+
+
+
+//   return (
+//     <div className="upload-center">
+//       <Card className="upload-card">
+//         <div className="upload-card-inner">
+
+//           {/* Main upload box */}
+//           <div className="upload-drop-box">
+
+//             <div className="upload-drop-header">
+//               <div className="upload-icon-circle">
+//                 <Upload className="upload-main-icon" />
+//               </div>
+
+//               <div className="upload-text-block">
+//                 <h3 className="upload-main-heading">
+//                   Drop NSG surveillance files or folders here
+//                 </h3>
+//                 <p className="upload-main-text">
+//                   Supports MP4, AVI, MOV and other common video streams.
+//                 </p>
+//               </div>
+//             </div>
+
+//             <div className="upload-actions upload-actions-top">
+//               <Button className="primary-btn" onClick={handleFileUpload}>
+//                 <FileVideo className="icon-sm icon-left" />
+//                 Upload File
+//               </Button>
+
+//               <Button className="primary-btn" onClick={handleFolderUpload}>
+//                 <FolderOpen className="icon-sm icon-left" />
+//                 Upload Folder
+//               </Button>
+
+//               {uploadedFiles.length > 0 && (
+//                 <Button
+//                   onClick={analyzeFolder}
+//                   disabled={isAnalyzing}
+//                   className="danger-btn"
+//                 >
+//                   <Sparkles className="icon-sm icon-left" />
+//                   {isAnalyzing ? "Uploading..." : "Run AI Analysis"}
+//                 </Button>
+//               )}
+//             </div>
+//           </div>
+
+//           {/* File list */}
+//           {uploadedFiles.length > 0 && (
+//             <div className="upload-status">
+//               <div className="upload-status-header">
+//                 <div className="upload-status-left">
+//                   <FolderOpen className="icon-sm tactical-colour" />
+//                   <p className="upload-status-text">
+//                     {uploadedFiles.length} videos selected
+//                   </p>
+//                 </div>
+
+//                 <Button
+//                   variant="ghost"
+//                   size="sm"
+//                   onClick={clearAllFiles}
+//                   className="icon-circle danger-icon"
+//                 >
+//                   <Trash2 className="icon-xs" />
+//                 </Button>
+//               </div>
+
+//               <div className="upload-status-list">
+//                 {uploadedFiles.map((file, index) => (
+//                   <div key={index} className="upload-file-row">
+//                     <div className="upload-file-left">
+//                       <FileVideo className="icon-xs muted-colour" />
+//                       <span className="upload-file-name">{file.name}</span>
+//                     </div>
+
+//                     <div className="upload-file-right">
+//                       <span className="upload-file-size">
+//                         {formatFileSize(file.size)}
+//                       </span>
+//                       <Button
+//                         variant="ghost"
+//                         size="sm"
+//                         onClick={() => deleteFile(index)}
+//                         className="icon-circle subtle-delete"
+//                       >
+//                         <X className="icon-xs" />
+//                       </Button>
+//                     </div>
+//                   </div>
+//                 ))}
+//               </div>
+//             </div>
+//           )}
+
+//           {/* Hidden file inputs */}
+//           <input
+//             type="file"
+//             ref={fileInputRef}
+//             onChange={handleFileChange}
+//             accept="video/*"
+//             multiple
+//             className="hidden-input"
+//           />
+
+//           <input
+//             type="file"
+//             ref={folderInputRef}
+//             onChange={handleFolderChange}
+//             accept="video/*"
+//             multiple
+//             webkitdirectory="true"
+//             className="hidden-input"
+//           />
+//         </div>
+//       </Card>
+//     </div>
+//   );
+// }
+
+
+
+
 import React, { useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -306,7 +572,6 @@ import {
   X,
   Send,
 } from "lucide-react";
-import axios from "axios";
 
 export default function UploadArea({
   uploadedFiles,
@@ -321,59 +586,118 @@ export default function UploadArea({
   const folderInputRef = useRef(null);
   const [userQuery, setUserQuery] = useState("");
 
-  const folderId = "67b6b7e1d21f1fc80fb7cf92"; // TEMP — replace with dynamic folderId if needed
+  // ===============================
+  // ⭐ Upload to Backend
+  // ===============================
+  const uploadToBackend = async () => {
+    if (!uploadedFiles.length) {
+      console.warn("No files to upload");
+      return;
+    }
 
-  const handleFileUpload = () => {
-    if (fileInputRef.current) fileInputRef.current.click();
+    const form = new FormData();
+
+    // Check if folder upload
+    const folderName = uploadedFiles[0].folderName || "";
+
+    uploadedFiles.forEach((fileObj) => {
+      form.append("files", fileObj.file); // REAL FILE OBJECT
+    });
+
+    if (folderName) {
+      form.append("folderName", folderName);
+    }
+
+    try {
+      const res = await fetch("http://localhost:5000/api/upload", {
+        method: "POST",
+        body: form,
+      });
+
+      const data = await res.json();
+      console.log("UPLOAD RESPONSE:", data);
+
+      if (!data.success) {
+        alert("Upload failed!");
+      } else {
+        alert("Uploaded successfully!");
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("Upload failed");
+    }
   };
 
-  const handleFolderUpload = () => {
-    if (folderInputRef.current) folderInputRef.current.click();
+  // ===============================
+  // ⭐ Upload files & Run AI
+  // ===============================
+  const analyzeFolder = async () => {
+    if (!uploadedFiles.length) return;
+
+    setIsAnalyzing(true);
+    await uploadToBackend();
+    setIsAnalyzing(false);
+    setShowAnalysis(true);
   };
 
+  // ===============================
+  // ⭐ File Input
+  // ===============================
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files || []);
 
     const videoFiles = files.map((file) => ({
+      file, // REAL file object
       name: file.name,
       size: file.size,
       type: file.type,
-      previewURL: URL.createObjectURL(file),
-      realFile: file, // ⭐ IMPORTANT — actual file
+      path: URL.createObjectURL(file),
     }));
 
     setUploadedFiles((prev) => [...prev, ...videoFiles]);
     event.target.value = "";
   };
 
+  // ===============================
+  // ⭐ Folder Input
+  // ===============================
   const handleFolderChange = (event) => {
     const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    // Extract folder name from webkitRelativePath
+    const firstPath = files[0].webkitRelativePath;
+    const folderName = firstPath.split("/")[0];
 
     const videoFiles = files
       .filter((file) => file.type.startsWith("video/"))
       .map((file) => ({
+        file, // REAL file
         name: file.name,
         size: file.size,
         type: file.type,
-        previewURL: URL.createObjectURL(file),
-        realFile: file,
+        path: URL.createObjectURL(file),
+        folderName, // IMPORTANT
       }));
 
-    setUploadedFiles((prev) => [...prev, ...videoFiles]);
+    setUploadedFiles(videoFiles);
     event.target.value = "";
   };
 
+  // ===============================
+  // ⭐ Delete / Clear
+  // ===============================
   const deleteFile = (index) => {
     setUploadedFiles((prev) => {
       const newFiles = [...prev];
-      URL.revokeObjectURL(newFiles[index].previewURL);
+      URL.revokeObjectURL(newFiles[index].path);
       newFiles.splice(index, 1);
       return newFiles;
     });
   };
 
   const clearAllFiles = () => {
-    uploadedFiles.forEach((file) => URL.revokeObjectURL(file.previewURL));
+    uploadedFiles.forEach((file) => URL.revokeObjectURL(file.path));
     setUploadedFiles([]);
   };
 
@@ -383,52 +707,11 @@ export default function UploadArea({
     return (bytes / Math.pow(1024, i)).toFixed(2) + " " + sizes[i];
   };
 
-  // ⭐ Upload each video one-by-one to your backend
-  const uploadToBackend = async (fileObj) => {
-    try {
-      const formData = new FormData();
-      formData.append("video", fileObj.realFile);   // ⭐ real file
-      formData.append("folderId", folderId);
-
-      const res = await axios.post(
-        "http://localhost:5000/api/upload-video",
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
-
-      console.log("Upload Response:", res.data);
-      return res.data;
-    } catch (err) {
-      console.error("Upload Error:", err);
-      return null;
-    }
-  };
-
-  // Run AI Analysis (upload all files)
-  const analyzeFolder = async () => {
-  if (!uploadedFiles.length) return;
-
-  setIsAnalyzing(true);
-
-  for (const file of uploadedFiles) {
-    await uploadToBackend(file);
-  }
-
-  setIsAnalyzing(false);
-
-  // ⭐ Automatically move to analysis view page
-  setShowAnalysis(true);
-};
-
-
   return (
     <div className="upload-center">
       <Card className="upload-card">
         <div className="upload-card-inner">
-
-          {/* Main upload box */}
           <div className="upload-drop-box">
-
             <div className="upload-drop-header">
               <div className="upload-icon-circle">
                 <Upload className="upload-main-icon" />
@@ -445,12 +728,12 @@ export default function UploadArea({
             </div>
 
             <div className="upload-actions upload-actions-top">
-              <Button className="primary-btn" onClick={handleFileUpload}>
+              <Button className="primary-btn" onClick={() => fileInputRef.current.click()}>
                 <FileVideo className="icon-sm icon-left" />
                 Upload File
               </Button>
 
-              <Button className="primary-btn" onClick={handleFolderUpload}>
+              <Button className="primary-btn" onClick={() => folderInputRef.current.click()}>
                 <FolderOpen className="icon-sm icon-left" />
                 Upload Folder
               </Button>
@@ -468,7 +751,7 @@ export default function UploadArea({
             </div>
           </div>
 
-          {/* File list */}
+          {/* FILE LIST */}
           {uploadedFiles.length > 0 && (
             <div className="upload-status">
               <div className="upload-status-header">
