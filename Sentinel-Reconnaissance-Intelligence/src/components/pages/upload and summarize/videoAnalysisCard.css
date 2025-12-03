@@ -10,15 +10,13 @@
   box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
 }
 
-
 /* ---------- Header ---------- */
-
 .analysis-result-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 20px;
 }
 
 .analysis-result-left {
@@ -46,9 +44,7 @@
   align-items: center;
 }
 
-
 /* ---------- Threat Pills ---------- */
-
 .pill {
   padding: 5px 10px;
   font-size: 0.72rem;
@@ -84,115 +80,126 @@
   padding: 6px 12px !important;
 }
 
-
 /* ---------- Grid Layout ---------- */
-
 .analysis-result-body {
   display: grid;
   grid-template-columns: 1fr 1.25fr;
-  gap: 20px;
+  gap: 24px;
+  margin-bottom: 20px;
 }
 
-
+.analysis-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
 /* ---------- Timeline ---------- */
-
 .section-title {
   font-size: 0.9rem;
   font-weight: 600;
-  margin: 0;
+  margin: 0 0 8px 0;
   color: #0f172a;
+}
+
+.analysis-section {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
 }
 
 .timeline-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .timeline-row {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 10px;
   border-radius: 10px;
   transition: 0.15s;
+  background: white;
+  border: 1px solid #f1f5f9;
 }
 
 .timeline-row:hover {
-  background: rgba(37, 99, 235, 0.1);
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.2);
 }
 
 .timeline-time {
-  font-family: monospace;
+  font-family: 'SF Mono', 'Roboto Mono', monospace;
   font-size: 0.82rem;
   color: #2563eb;
-  width: 80px;
+  font-weight: 600;
+  min-width: 80px;
+  flex-shrink: 0;
 }
 
 .timeline-event {
   font-size: 0.82rem;
   color: #475569;
+  line-height: 1.4;
+  flex: 1;
 }
 
-
 /* ---------- Duration ---------- */
-
 .duration-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-family: monospace;
+  gap: 8px;
+  font-family: 'SF Mono', 'Roboto Mono', monospace;
   font-size: 0.85rem;
   color: #1d4ed8;
+  padding: 6px 0;
 }
-
-
 
 /* ===========================================
    SNAPSHOT CARD (WITH SCROLL ONLY INSIDE GRID)
 =========================================== */
-
 .snapshot-card {
   background: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 14px;
-  padding: 10px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-
-  /* 👇 This forces scroll to activate */
-  min-height: 260px;
-  max-height: 260px;
+  gap: 12px;
+  height: 100%;
 }
 
 .snapshot-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 4px;
 }
 
 .snapshot-count {
   font-size: 0.76rem;
   color: #6b7280;
+  font-weight: 500;
+  background: #e5e7eb;
+  padding: 3px 8px;
+  border-radius: 10px;
 }
-
 
 /* 👇 Only this area scrolls */
 .snapshot-frames-container {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 6px;
-
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 14px;
+  overflow-y: auto;
+  max-height: 280px;
+  padding-right: 6px;
+  padding-bottom: 4px;
 }
 
 /* Scrollbar style */
-
 .snapshot-frames-container::-webkit-scrollbar {
   width: 6px;
 }
@@ -206,9 +213,7 @@
   background: rgba(100, 116, 139, 0.9);
 }
 
-
 /* ---------- Individual Frame ---------- */
-
 .snapshot-frame {
   display: flex;
   flex-direction: column;
@@ -217,13 +222,23 @@
   border: 1px solid #e5e7eb;
   background: white;
   box-shadow: 0px 4px 8px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.snapshot-frame:hover {
+  transform: translateY(-2px);
+  box-shadow: 0px 8px 16px rgba(15, 23, 42, 0.12);
 }
 
 .snapshot-frame-image-wrapper {
   aspect-ratio: 16 / 9;
   background: #eef2ff;
-  border-radius: 10px;
+  border-radius: 10px 10px 0 0;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .snapshot-frame-image {
@@ -235,147 +250,194 @@
 .snapshot-frame-meta {
   display: flex;
   justify-content: space-between;
-  padding: 5px 8px;
+  align-items: center;
+  padding: 8px 10px;
+  background: white;
 }
 
 .snapshot-frame-label {
   font-size: 0.78rem;
   font-weight: 600;
+  color: #0f172a;
 }
 
 .snapshot-frame-time {
   font-size: 0.72rem;
   color: #6b7280;
+  font-family: 'SF Mono', 'Roboto Mono', monospace;
 }
 
 .snapshot-empty {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #6b7280;
-  padding-left: 4px;
+  text-align: center;
+  padding: 40px 20px;
+  grid-column: 1 / -1;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px dashed #cbd5e1;
 }
-
-
 
 /* ===========================================
    SUMMARY + CHARTS
 =========================================== */
-
 .summary-panel {
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
-  padding: 16px;
-  margin-top: 18px;
+  padding: 18px;
+  margin-top: 20px;
 }
 
 .summary-section {
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 .summary-subtitle {
   font-size: 0.83rem;
   font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 6px;
 }
 
 .summary-text {
   font-size: 0.84rem;
-  line-height: 1.45rem;
+  line-height: 1.5;
   color: #374151;
 }
 
 .summary-conclusion {
   border-top: 1px dashed #cbd5e1;
-  padding-top: 8px;
-  margin-top: 10px;
+  padding-top: 12px;
+  margin-top: 14px;
 }
 
+/* ---------- Live Analysis Banner ---------- */
+.live-banner {
+  background: linear-gradient(90deg, #2563eb, #3b82f6);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  animation: pulse 2s infinite;
+}
 
+.live-banner h3 {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-/* ---------- Chart Styling ---------- */
+.live-banner p {
+  margin: 4px 0;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
 
-.summary-chart {
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.9; }
+}
+
+.live-frame-section {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.live-frame-section h4 {
+  margin: 0 0 12px 0;
+  color: #0369a1;
+  font-size: 0.95rem;
+}
+
+.live-frame-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.live-frame-card {
   background: white;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  margin-top: 6px;
-  position: relative;
-  height: 145px;
-}
-
-.chart-grid-lines {
-  position: absolute;
-  inset: 12px 12px 28px 12px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.chart-grid-line {
-  height: 1px;
-  background: rgba(203, 213, 225, 0.7);
-}
-
-.chart-bars {
-  height: 100%;
-  display: flex;
-  align-items: flex-end;
-  gap: 20px;
-  padding-left: 10px;
-}
-
-.chart-bar-block {
-  text-align: center;
-}
-
-.chart-bar-outer {
-  width: 30px;
-  height: 100%;
-  background: #e5e7eb;
-  border-radius: 12px;
+  border-radius: 10px;
   overflow: hidden;
-  margin: auto;
-  display: flex;
-  align-items: flex-end;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.chart-bar-fill {
+.live-frame-thumb {
   width: 100%;
-  background: linear-gradient(180deg, #2563eb, rgba(37,99,235,0.2));
+  height: 100px;
+  object-fit: cover;
 }
 
-.chart-bar-highlight {
-  background: linear-gradient(180deg, #dc2626, rgba(220,38,38,0.25));
-}
-
-.chart-bar-value {
-  font-size: 0.75rem;
-  font-family: monospace;
-}
-
-.chart-bar-label {
+.live-frame-meta {
+  padding: 8px;
   font-size: 0.75rem;
   color: #475569;
-  font-weight: 500;
+  margin: 0;
+  line-height: 1.4;
 }
 
-.chart-axis {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.75rem;
-  margin-top: 4px;
-  color: #6b7280;
+/* ---------- Icons ---------- */
+.icon-sm {
+  width: 20px;
+  height: 20px;
 }
 
+.icon-xs {
+  width: 16px;
+  height: 16px;
+}
 
-/* -------- Responsive -------- */
+.icon-left {
+  margin-right: 6px;
+}
 
+.tactical-colour {
+  color: #2563eb;
+}
+
+/* ---------- Responsive ---------- */
 @media (max-width: 850px) {
   .analysis-result-body {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
+  
+  .analysis-result-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .analysis-result-meta {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  
+  .snapshot-frames-container {
+    max-height: 320px;
+  }
+  
+  .live-frame-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}
 
-  .snapshot-card {
-    max-height: 300px;
+@media (max-width: 640px) {
+  .analysis-result-card {
+    padding: 14px;
+  }
+  
+  .snapshot-frames-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .live-frame-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

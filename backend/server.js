@@ -623,6 +623,9 @@ const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const path = require("path");
+const folderRoutes = require("./routes/folderRoutes");
+const mongoose = require("mongoose");
+
 
 const uploadRoute = require("./upload");
 const liveEventRoute = require("./routes/liveEvent");
@@ -654,6 +657,13 @@ io.on("connection", (socket) => {
 // Routes
 app.use("/api", uploadRoute);
 app.use("/api", liveEventRoute);
+app.use("/api/folders", folderRoutes);
+
+// DB connect
+mongoose.connect("mongodb://127.0.0.1:27017/sri_v1")
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.log("DB error:", err));
+
 
 // START THE SERVER CORRECTLY!
 const PORT = 5000;
