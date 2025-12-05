@@ -632,13 +632,20 @@ export default function UploadArea({
   // ⭐ Upload files & Run AI
   // ===============================
   const analyzeFolder = async () => {
-    if (!uploadedFiles.length) return;
+  if (!uploadedFiles.length) return;
 
-    setIsAnalyzing(true);
-    await uploadToBackend();
-    setIsAnalyzing(false);
-    setShowAnalysis(true);
-  };
+  setIsAnalyzing(true);  // SHOW ANIMATION
+
+  await uploadToBackend();
+
+  // Simulate backend processing delay (optional)
+  // await new Promise((res) => setTimeout(res, 1200));
+
+  setIsAnalyzing(false);  // HIDE ANIMATION
+
+  setShowAnalysis(true);  // NAVIGATE TO ANALYSIS PAGE
+};
+
 
   // ===============================
   // ⭐ File Input

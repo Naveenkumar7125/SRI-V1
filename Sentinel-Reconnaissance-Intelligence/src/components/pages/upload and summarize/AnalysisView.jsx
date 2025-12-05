@@ -182,32 +182,43 @@ export default function AnalysisView({
   // Chat Query Handler
   // -----------------------------
   const handleSendQuery = async () => {
-    if (!query.trim()) return;
+  if (!query.trim()) return;
 
-    const userMessage = {
-      id: Date.now().toString(),
-      type: "user",
-      content: query,
-      timestamp: new Date(),
-    };
+  const userMessage = {
+    id: Date.now().toString(),
+    type: "user",
+    content: query,
+    timestamp: new Date(),
+  };
 
-    setChatMessages((prev) => [...prev, userMessage]);
-    setQuery("");
-    setIsProcessingQuery(true);
+  setChatMessages((prev) => [...prev, userMessage]);
+  setQuery("");
+  setIsProcessingQuery(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 1200));
+  try {
+    const res = await fetch("http://localhost:5000/api/chat/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    });
+
+    const data = await res.json();
 
     const aiResponse = {
       id: (Date.now() + 1).toString(),
       type: "assistant",
-      content:
-        "Based on the processed footage, I can highlight key intervals, suspicious behavior clusters, or specific threat levels you ask about.",
+      content: data.answer,
       timestamp: new Date(),
     };
 
     setChatMessages((prev) => [...prev, aiResponse]);
-    setIsProcessingQuery(false);
-  };
+  } catch (err) {
+    console.log(err);
+  }
+
+  setIsProcessingQuery(false);
+};
+
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {

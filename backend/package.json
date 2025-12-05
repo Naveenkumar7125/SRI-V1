@@ -2,7 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon server.js"
@@ -11,14 +11,17 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "child_process": "^1.0.2",
     "cors": "^2.8.5",
-    "express": "^5.1.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
     "express-fileupload": "^1.5.2",
     "fs": "^0.0.1-security",
     "http": "^0.0.1-security",
     "mongoose": "^9.0.0",
     "multer": "^2.0.2",
+    "node-fetch": "^3.3.2",
     "path": "^0.12.7",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",

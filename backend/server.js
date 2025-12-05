@@ -619,12 +619,83 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const http = require("http");
 const path = require("path");
 const folderRoutes = require("./routes/folderRoutes");
 const mongoose = require("mongoose");
+const chatRoute = require("./routes/chatRoute.js");
+
 
 
 const uploadRoute = require("./upload");
@@ -654,15 +725,22 @@ io.on("connection", (socket) => {
   });
 });
 
+
 // Routes
 app.use("/api", uploadRoute);
 app.use("/api", liveEventRoute);
 app.use("/api/folders", folderRoutes);
 
+
+
+app.use("/api/chat", chatRoute);
+
+
 // DB connect
-mongoose.connect("mongodb://127.0.0.1:27017/sri_v1")
+mongoose.connect("mongodb://localhost:27017/sri_v1")
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.log("DB error:", err));
+  
 
 
 // START THE SERVER CORRECTLY!
@@ -671,3 +749,8 @@ server.listen(PORT, () => {
   console.log(`🚀 Backend running at http://localhost:${PORT}`);
   console.log("🟢 Socket.IO Server Ready");
 });
+
+
+
+
+
