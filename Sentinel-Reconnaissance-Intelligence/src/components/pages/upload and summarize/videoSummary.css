@@ -1,0 +1,8 @@
+/* videoSummary.css */
+.summary-main{ background:#f1f5f9; border-radius:12px; padding:18px; border:1px solid #e2e8f0; margin-top:10px; }
+.summary-title{ font-size:1.05rem; font-weight:700; margin-bottom:8px; }
+.summary-text{ color:#000000; line-height:1.5; margin-bottom:12px; }
+.summary-actions{ display:flex; gap:10px; margin-top:8px; flex-wrap:wrap; }
+.primary-btn{ background:#2563eb !important; color:#fff !important; display:inline-flex; gap:8px; align-items:center; padding:8px 12px; border-radius:10px; }
+.secondary-btn{ background:#e5e7eb !important; color:#374151 !important; padding:8px 12px; border-radius:10px; }
+@media (max-width:600px){ .summary-actions{ flex-direction:column; align-items:stretch; } }

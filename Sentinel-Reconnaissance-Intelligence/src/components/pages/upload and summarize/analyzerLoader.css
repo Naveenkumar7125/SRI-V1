@@ -1,0 +1,116 @@
+/* Fullscreen Overlay */
+.analysis-loader-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(12px) brightness(0.35);
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Loader Box */
+.analysis-loader-box {
+  text-align: center;
+  color: white;
+  position: relative;
+}
+
+/* Radar Pulse */
+.radar-ring {
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 255, 255, 0.3);
+  margin: 0 auto 20px;
+  animation: radarPulse 2.5s infinite ease-out;
+  filter: drop-shadow(0 0 12px #00f2ff);
+}
+
+@keyframes radarPulse {
+  0% { transform: scale(0.55); opacity: 0.9; }
+  100% { transform: scale(1.45); opacity: 0; }
+}
+
+/* Floating Icon */
+.loader-main-icon {
+  width: 70px;
+  height: 70px;
+  color: #00eaff;
+  filter: drop-shadow(0 0 10px #00eaff);
+  animation: floatIcon 2s infinite ease-in-out;
+}
+
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+/* Text */
+.loader-title {
+  font-size: 24px;
+  margin-top: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #e6f9ff;
+}
+
+.loader-sub {
+  font-size: 14px;
+  opacity: 0.7;
+  margin-top: 4px;
+}
+
+/* Progress Bar */
+.loader-progress-container {
+  width: 300px;
+  height: 8px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 5px;
+  margin: 18px auto 6px;
+  overflow: hidden;
+}
+
+.loader-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #00eaff, #00b8ff);
+  transition: width 0.35s ease-out;
+}
+
+.loader-progress-text {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* Dots */
+.loader-dots {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.loader-dots span {
+  width: 10px;
+  height: 10px;
+  background: #00eaff;
+  border-radius: 50%;
+  margin: 0 5px;
+  animation: bounce 0.9s infinite alternate;
+}
+
+.loader-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loader-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+  from { transform: translateY(0); opacity: 0.6; }
+  to { transform: translateY(-10px); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
