@@ -179,7 +179,7 @@ router.post("/upload", upload.array("files"), (req, res) => {
     });
 
     // Start Python analysis (pass folder name only)
-    const py = spawn("python", [
+    const py = spawn("C:/Users/HP/AppData/Local/Programs/Python/Python39/python.exe", [
       path.join(__dirname, "..", "backend", "analyze_folder.py"),
       targetFolderName,
     ], { cwd: process.cwd() });

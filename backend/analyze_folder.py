@@ -54,6 +54,8 @@
 # print("Finished analyzing all videos.")
 
 
+import sys
+print("PYTHON EXECUTABLE:", sys.executable)
 
 import sys
 import os
@@ -64,7 +66,7 @@ import base64
 import threading
 import requests
 import asyncio
-import websockets
+# import websockets
 
 from dotenv import load_dotenv
 
@@ -356,3 +358,7 @@ if __name__ == "__main__":
 
     folder_name = sys.argv[1]
     analyze_folder(folder_name)
+
+
+
+print("HI")

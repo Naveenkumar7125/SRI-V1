@@ -1,25 +1,32 @@
-/* =============== CAMERA WALL WRAPPER =============== */
-
-.live-feeds-wrapper {
-  width: 100%;
-  max-width: 1400px;
-  margin: 10px auto;
-  padding: 6px;
-  box-sizing: border-box;
-
-  background: #020617;
-  border-radius: 10px;
-  border: 1px solid #111827;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
-}
-
-/* =============== RESPONSIVE GRID =============== */
-/* Uses auto-fit so it adapts beautifully to width */
+/* =============== CAMERA GRID =============== */
 
 .camera-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(3, 1fr);  /* 3 x N layout on desktop */
+  gap: 10px;
+  width: 100%;
+  max-width: 1600px;
+  margin: 10px auto;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* Tablets / small laptops */
+@media (max-width: 1024px) {
+  .camera-grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns */
+    gap: 8px;
+    padding: 8px;
+  }
+}
+
+/* Mobiles */
+@media (max-width: 600px) {
+  .camera-grid {
+    grid-template-columns: 1fr; /* 1 column */
+    gap: 6px;
+    padding: 6px;
+  }
 }
 
 /* =============== CAMERA TILE =============== */
@@ -44,12 +51,27 @@
   border-color: #ef4444;
 }
 
+/* Add Camera Card */
+.add-camera-card:hover {
+  border-color: #38bdf8;
+  box-shadow: 0 5px 16px rgba(56, 189, 248, 0.35);
+}
+
+.add-camera-plus {
+  font-size: 2.5rem !important;
+  color: #38bdf8 !important;
+}
+
+.add-camera-text {
+  color: #38bdf8 !important;
+}
+
 /* =============== VIDEO AREA WITH OVERLAYS =============== */
 
 .camera-video {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9; /* responsive rectangle */
+  aspect-ratio: 16 / 9;
   background: radial-gradient(circle at 20% 20%, #111827 0, #020617 70%);
   display: flex;
   align-items: center;
@@ -141,29 +163,6 @@
   text-overflow: ellipsis;
 }
 
-/* =============== RESPONSIVE TWEAKS =============== */
-
-@media (max-width: 768px) {
-  .live-feeds-wrapper {
-    padding: 6px;
-    border-radius: 8px;
-  }
-
-  .camera-grid {
-    gap: 6px;
-  }
-
-  .camera-video-center {
-    font-size: 0.68rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .live-feeds-wrapper {
-    margin: 8px auto;
-  }
-}
-
 /* =============== MODAL =============== */
 
 .camera-modal-overlay {
@@ -211,6 +210,16 @@
   color: #9ca3af;
   font-size: 1.4rem;
   cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-modal-close:hover {
+  color: #e5e7eb;
 }
 
 .camera-modal-video {
@@ -238,6 +247,188 @@
   margin-top: 4px;
 }
 
+/* =============== ADD CAMERA MODAL (WHITE THEME) =============== */
+
+.add-camera-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.add-camera-modal-content {
+  width: 500px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.add-camera-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.add-camera-modal-title h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.add-camera-modal-title span {
+  font-size: 0.875rem;
+  color: #6b7280;
+  display: block;
+  margin-top: 4px;
+}
+
+.add-camera-modal-close {
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+.add-camera-modal-close:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.add-camera-form {
+  flex: 1;
+}
+
+.form-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.form-field {
+  display: grid;
+  gap: 6px;
+}
+
+.form-field label {
+  font-size: 0.875rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+.form-input {
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #111827;
+  font-size: 0.875rem;
+  transition: all 0.15s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input::placeholder {
+  color: #9ca3af;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.form-row .form-field {
+  flex: 1;
+}
+
+.add-camera-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.add-form-button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+  min-width: 100px;
+}
+
+.add-form-button-cancel {
+  background: white;
+  border: 1px solid #d1d5db;
+  color: #374151;
+}
+
+.add-form-button-cancel:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.add-form-button-add {
+  background: #3b82f6;
+  color: white;
+  font-weight: 600;
+}
+
+.add-form-button-add:hover {
+  background: #2563eb;
+}
+
+.add-form-button-add:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.add-form-button-add:disabled:hover {
+  background: #9ca3af;
+}
+
+/* =============== RESPONSIVE TWEAKS (MODALS & FORM) =============== */
+
+@media (max-width: 768px) {
+  .camera-video-center {
+    font-size: 0.68rem;
+  }
+
+  .add-camera-plus {
+    font-size: 2rem !important;
+  }
+
+  .add-camera-modal-content {
+    width: 90vw;
+    padding: 20px;
+  }
+}
+
 @media (max-width: 600px) {
   .camera-modal-content {
     width: 94vw;
@@ -246,5 +437,23 @@
   .camera-modal-footer {
     flex-direction: column;
     gap: 4px;
+  }
+
+  .add-camera-modal-content {
+    width: 94vw;
+    padding: 16px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .add-camera-form-footer {
+    flex-direction: column;
+  }
+
+  .add-form-button {
+    width: 100%;
   }
 }
