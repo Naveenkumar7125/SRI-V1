@@ -104,7 +104,7 @@
 
 // //     // Trigger Python script
 // //     console.log("🐍 Starting Python...");
-    
+
 // //     const py = spawn("python", [
 // //       path.join(__dirname, "python/analyze_video.py"),
 // //       savedPath,
@@ -740,7 +740,7 @@
 // mongoose.connect("mongodb://localhost:27017/sri_v1")
 //   .then(() => console.log("MongoDB connected"))
 //   .catch(err => console.log("DB error:", err));
-  
+
 
 
 // // START THE SERVER CORRECTLY!
@@ -1057,7 +1057,7 @@
 //     `Check live feed from camera ${cam_id}`,
 //     'Review archived footage for related activity'
 //   ];
-  
+
 //   const categorySpecific = {
 //     'fighting_detected': ['Deploy intervention team immediately', 'Secure perimeter around incident area'],
 //     'person_missing': ['Initiate search protocol', 'Check all exit points'],
@@ -1065,7 +1065,7 @@
 //     'fire_detected': ['Activate fire suppression system', 'Evacuate affected area'],
 //     'intrusion': ['Secure all access points', 'Initiate lockdown procedure']
 //   };
-  
+
 //   return [...(categorySpecific[category] || []), ...baseRecommendations];
 // };
 
@@ -1684,17 +1684,25 @@ const http = require('http');
 const mongoose = require('mongoose');
 const socketIo = require('socket.io');
 
+// -------------------- Upload route (video upload + analysis) --------------------
+const uploadRoute = require('./upload');
+const chatRoute = require('./routes/chatRoute');
+
 // -------------------- Basic app + server --------------------
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Mount upload routes (must be before other routes)
+app.use('/api', uploadRoute);
+app.use('/api/chat', chatRoute);
+
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
 
-const io = socketIo(server, { 
-  cors: { 
+const io = socketIo(server, {
+  cors: {
     origin: "*", // Allow all origins for development
     methods: ["GET", "POST"],
     credentials: true
@@ -1703,7 +1711,7 @@ const io = socketIo(server, {
 });
 
 // -------------------- MongoDB Connection to SRI Database --------------------
-const MONGODB_URI_SRI = process.env.MONGODB_URI_SRI || 
+const MONGODB_URI_SRI = process.env.MONGODB_URI_SRI ||
   'mongodb+srv://naveenkumart906_db_user:JrY0q4QoPtIhGRfz@nk.wpf1cvv.mongodb.net/SRI?retryWrites=true&w=majority&appName=NK';
 
 // Create connection to SRI database
@@ -1764,17 +1772,43 @@ eventSchema.index({ event_type: 1 });
 
 const Event = sriConn.model('Event', eventSchema, 'events');
 
+// Attach io to app so upload.js can use it via req.app.get('io')
+app.set('io', io);
+
 // -------------------- Socket.IO Connection Handling --------------------
 io.on('connection', (socket) => {
   console.log(`🔥 Frontend connected: ${socket.id}`);
-  
+
   // Send welcome message
-  socket.emit('connected', { 
+  socket.emit('connected', {
     message: 'Connected to SRI surveillance server',
     socketId: socket.id,
     timestamp: new Date()
   });
-  
+
+  // ---- Upload/Analysis room handling ----
+  // Frontend joins a room specific to a folder's analysis session
+  socket.on('join_folder', ({ folderId }) => {
+    if (!folderId) return;
+    const room = `folder_${folderId}`;
+    socket.join(room);
+    console.log(`📁 Socket ${socket.id} joined room: ${room}`);
+    socket.emit('joined_folder', { folderId, room, message: 'Joined analysis room' });
+
+    // If analysis already has frames, send what we have immediately
+    const analysisStore = uploadRoute.analysisStore;
+    if (analysisStore && analysisStore[folderId]) {
+      const data = analysisStore[folderId];
+      if (data.keyFrames && data.keyFrames.length > 0) {
+        socket.emit('analysis_progress', {
+          folderId,
+          progress: data.progress || 0,
+          videoName: data.folderName || folderId,
+        });
+      }
+    }
+  });
+
   // Handle events request from frontend
   socket.on('request-events', async () => {
     try {
@@ -1787,11 +1821,11 @@ io.on('connection', (socket) => {
       socket.emit('error', { message: 'Failed to fetch events' });
     }
   });
-  
+
   socket.on('disconnect', () => {
     console.log(`❌ Frontend disconnected: ${socket.id}`);
   });
-  
+
   socket.on('error', (error) => {
     console.error(`Socket error from ${socket.id}:`, error);
   });
@@ -1800,14 +1834,119 @@ io.on('connection', (socket) => {
 // -------------------- Database event emitter for real-time updates --------------------
 const emitNewEvent = (event) => {
   console.log(`📢 Emitting new event: ${event.event_type} from ${event.camera_id}`);
-  try { 
+  try {
     io.emit('new-event', event);
     io.emit('new-frame', event); // For backward compatibility
     console.log(`✅ Event emitted to all connected clients`);
-  } catch (e) { 
+  } catch (e) {
     console.error('Error emitting socket event:', e);
   }
 };
+
+// -------------------- Python Analysis Callback Routes --------------------
+// These are called by analyze_folder.py during processing
+
+// POST /api/live-frame — Python sends each detected frame here
+app.post('/api/live-frame', (req, res) => {
+  try {
+    const payload = req.body;
+    const folderName = payload.folderName || payload.folderId;
+
+    console.log('📡 LIVE FRAME received from Python:', payload.shortSummary || 'unknown');
+
+    // Update in-memory store
+    const analysisStore = uploadRoute.analysisStore;
+    if (folderName && analysisStore[folderName]) {
+      const store = analysisStore[folderName];
+      store.keyFrames.push(payload);
+      store.events.push({
+        timestamp: payload.timestamp,
+        summary: payload.shortSummary,
+        imageUrl: payload.imageUrl,
+      });
+    }
+
+    // Emit via Socket.IO to the folder room + broadcast
+    const room = `folder_${folderName}`;
+    io.to(room).emit('live_frame', payload);
+    io.to(room).emit('analysis_progress', {
+      folderId: folderName,
+      progress: payload.progress || 50,
+      videoName: payload.videoName || folderName,
+    });
+
+    return res.json({ success: true, forwarded: true });
+  } catch (err) {
+    console.error('❌ LIVE FRAME ERROR:', err);
+    return res.status(500).json({ success: false, error: 'Failed to process live frame' });
+  }
+});
+
+// POST /api/push-frame — alternate endpoint name used in some versions of analyze_folder.py
+app.post('/api/push-frame', (req, res) => {
+  // Reuse same logic as live-frame
+  req.url = '/api/live-frame';
+  try {
+    const payload = req.body;
+    const folderName = payload.folderName || payload.folderId;
+
+    const analysisStore = uploadRoute.analysisStore;
+    if (folderName && analysisStore[folderName]) {
+      const store = analysisStore[folderName];
+      store.keyFrames.push(payload);
+      store.events.push({
+        timestamp: payload.timestamp,
+        summary: payload.shortSummary,
+        imageUrl: payload.imageUrl,
+      });
+    }
+
+    const room = `folder_${folderName}`;
+    io.to(room).emit('live_frame', payload);
+    io.to(room).emit('analysis_progress', {
+      folderId: folderName,
+      progress: 50,
+      videoName: payload.videoName || folderName,
+    });
+
+    return res.json({ success: true, forwarded: true });
+  } catch (err) {
+    console.error('❌ PUSH-FRAME ERROR:', err);
+    return res.status(500).json({ success: false, error: 'Failed to process frame' });
+  }
+});
+
+// POST /api/analysis-complete — Python sends final summary here
+app.post('/api/analysis-complete', (req, res) => {
+  try {
+    const payload = req.body;
+    const folderName = payload.folderName || payload.folderId;
+
+    console.log('🎉 ANALYSIS COMPLETE received from Python, folder:', folderName);
+
+    // Update in-memory store
+    const analysisStore = uploadRoute.analysisStore;
+    if (folderName && analysisStore[folderName]) {
+      analysisStore[folderName].status = 'completed';
+      analysisStore[folderName].progress = 100;
+    }
+
+    // Emit completion event to the folder room
+    const room = `folder_${folderName}`;
+    const totalFrames = analysisStore[folderName]?.keyFrames?.length || 0;
+    io.to(room).emit('analysis_complete', {
+      folderId: folderName,
+      totalFrames,
+      message: 'Analysis completed!',
+      data: payload,
+    });
+
+    return res.json({ success: true, message: 'Analysis complete event broadcasted' });
+  } catch (err) {
+    console.error('❌ ANALYSIS-COMPLETE ERROR:', err);
+    return res.status(500).json({ success: false, error: 'Failed to handle analysis completion' });
+  }
+});
 
 // -------------------- API Routes for Video Events --------------------
 
@@ -1815,22 +1954,22 @@ const emitNewEvent = (event) => {
 app.get('/api/events', async (req, res) => {
   try {
     console.log('📥 GET /api/events request received');
-    
+
     const { page = 1, limit = 50, event_type, camera_id, start_date, end_date } = req.query;
-    
+
     // Build filter query
     const filter = {};
-    
+
     if (event_type && event_type !== 'all') {
       filter.event_type = event_type;
       console.log(`🔍 Filtering by event_type: ${event_type}`);
     }
-    
+
     if (camera_id && camera_id !== 'all') {
       filter.camera_id = camera_id;
       console.log(`🔍 Filtering by camera_id: ${camera_id}`);
     }
-    
+
     if (start_date || end_date) {
       filter.timestamp = {};
       if (start_date) {
@@ -1842,26 +1981,26 @@ app.get('/api/events', async (req, res) => {
         console.log(`🔍 Filtering by end_date: ${end_date}`);
       }
     }
-    
+
     // Execute query with pagination
     const events = await Event.find(filter)
       .sort({ timestamp: -1 })
       .limit(parseInt(limit))
       .skip((parseInt(page) - 1) * parseInt(limit));
-    
+
     // Get total count for pagination info
     const total = await Event.countDocuments(filter);
-    
+
     console.log(`✅ Found ${events.length} events (total in DB: ${total})`);
-    
+
     // Return events directly as array (frontend expects array)
     res.json(events);
   } catch (error) {
     console.error('❌ Error fetching events:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Failed to fetch events',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -1870,25 +2009,25 @@ app.get('/api/events', async (req, res) => {
 app.get('/api/events/:id', async (req, res) => {
   try {
     console.log(`📥 GET /api/events/${req.params.id} request received`);
-    
+
     const event = await Event.findById(req.params.id);
-    
+
     if (!event) {
       console.log(`❌ Event not found: ${req.params.id}`);
-      return res.status(404).json({ 
-        success: false, 
-        error: 'Event not found' 
+      return res.status(404).json({
+        success: false,
+        error: 'Event not found'
       });
     }
-    
+
     console.log(`✅ Found event: ${event.event_type} from ${event.camera_id}`);
     res.json(event);
   } catch (error) {
     console.error('❌ Error fetching event:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Failed to fetch event',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -1898,26 +2037,26 @@ app.post('/api/events', async (req, res) => {
   try {
     console.log('📥 POST /api/events request received');
     const { event_type, camera_id, data } = req.body;
-    
+
     // Validate required fields
     if (!event_type || !camera_id || !data?.video) {
       console.log('❌ Missing required fields');
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Missing required fields: event_type, camera_id, and data.video are required' 
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: event_type, camera_id, and data.video are required'
       });
     }
-    
+
     // Validate event type
     const validEventTypes = ["VIDEO_RECORDED", "FACE_MATCH", "INTRUSION", "ANOMALY", "VIOLENCE"];
     if (!validEventTypes.includes(event_type)) {
       console.log(`❌ Invalid event_type: ${event_type}`);
-      return res.status(400).json({ 
-        success: false, 
-        error: `Invalid event_type. Must be one of: ${validEventTypes.join(', ')}` 
+      return res.status(400).json({
+        success: false,
+        error: `Invalid event_type. Must be one of: ${validEventTypes.join(', ')}`
       });
     }
-    
+
     // Create new event
     const newEvent = new Event({
       event_type,
@@ -1931,14 +2070,14 @@ app.post('/api/events', async (req, res) => {
         metadata: data.metadata || {}
       }
     });
-    
+
     const savedEvent = await newEvent.save();
-    
+
     // Emit real-time update via Socket.IO
     emitNewEvent(savedEvent);
-    
+
     console.log(`✅ Event created: ${savedEvent.event_type} from ${savedEvent.camera_id}`);
-    
+
     res.status(201).json({
       success: true,
       message: 'Event created successfully',
@@ -1946,10 +2085,10 @@ app.post('/api/events', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error creating event:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Failed to create event',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -1958,33 +2097,33 @@ app.post('/api/events', async (req, res) => {
 app.get('/api/events/stats/summary', async (req, res) => {
   try {
     console.log('📥 GET /api/events/stats/summary request received');
-    
+
     const totalEvents = await Event.countDocuments();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const todayEvents = await Event.countDocuments({
       timestamp: { $gte: today }
     });
-    
+
     // Count by event type
     const eventsByType = await Event.aggregate([
       { $group: { _id: '$event_type', count: { $sum: 1 } } },
       { $sort: { count: -1 } }
     ]);
-    
+
     // Count by camera
     const eventsByCamera = await Event.aggregate([
       { $group: { _id: '$camera_id', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 10 }
     ]);
-    
+
     // Latest event
     const latestEvent = await Event.findOne().sort({ timestamp: -1 });
-    
+
     console.log(`✅ Stats: ${totalEvents} total events, ${todayEvents} today`);
-    
+
     res.json({
       success: true,
       data: {
@@ -1997,10 +2136,10 @@ app.get('/api/events/stats/summary', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error fetching stats:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Failed to fetch statistics',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -2010,22 +2149,22 @@ app.get('/api/cameras/:camera_id/events', async (req, res) => {
   try {
     const { camera_id } = req.params;
     const { limit = 50 } = req.query;
-    
+
     console.log(`📥 GET /api/cameras/${camera_id}/events request received`);
-    
+
     const events = await Event.find({ camera_id })
       .sort({ timestamp: -1 })
       .limit(parseInt(limit));
-    
+
     console.log(`✅ Found ${events.length} events for camera ${camera_id}`);
-    
+
     res.json(events);
   } catch (error) {
     console.error('❌ Error fetching camera events:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Failed to fetch camera events',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -2034,7 +2173,7 @@ app.get('/api/cameras/:camera_id/events', async (req, res) => {
 app.post('/api/events/test-data', async (req, res) => {
   try {
     console.log('📥 POST /api/events/test-data request received');
-    
+
     const testEvents = [
       {
         event_type: "VIDEO_RECORDED",
@@ -2089,14 +2228,14 @@ app.post('/api/events/test-data', async (req, res) => {
 
     // Insert test events
     const savedEvents = await Event.insertMany(testEvents);
-    
+
     // Emit events in reverse order (newest first)
     savedEvents.reverse().forEach(event => {
       emitNewEvent(event);
     });
-    
+
     console.log(`✅ Created ${savedEvents.length} test events`);
-    
+
     res.status(201).json({
       success: true,
       message: `${savedEvents.length} test events created successfully`,
@@ -2104,10 +2243,10 @@ app.post('/api/events/test-data', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error creating test data:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Failed to create test data',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -2116,26 +2255,26 @@ app.post('/api/events/test-data', async (req, res) => {
 app.delete('/api/events', async (req, res) => {
   try {
     console.log('📥 DELETE /api/events request received');
-    
+
     const result = await Event.deleteMany({});
-    
+
     // Emit clear event via Socket.IO
     try {
       io.emit('events-cleared');
-    } catch (e) {}
-    
+    } catch (e) { }
+
     console.log(`✅ Cleared ${result.deletedCount} events`);
-    
+
     res.json({
       success: true,
       message: `All ${result.deletedCount} events cleared successfully`
     });
   } catch (error) {
     console.error('❌ Error clearing events:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Failed to clear events',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -2145,7 +2284,7 @@ const initializeDatabase = async () => {
   try {
     const eventCount = await Event.countDocuments();
     console.log(`📊 Current events in database: ${eventCount}`);
-    
+
     if (eventCount === 0) {
       console.log('📝 Database empty. You can add test data by calling:');
       console.log('   POST http://localhost:5000/api/events/test-data');
@@ -2157,8 +2296,8 @@ const initializeDatabase = async () => {
 
 // -------------------- Health Check Endpoint --------------------
 app.get('/api/health', (req, res) => {
-  const dbState = sriConn.readyState === 1 ? 'Connected' : 
-                  sriConn.readyState === 2 ? 'Connecting' : 'Disconnected';
+  const dbState = sriConn.readyState === 1 ? 'Connected' :
+    sriConn.readyState === 2 ? 'Connecting' : 'Disconnected';
 
   res.json({
     status: 'OK',
@@ -2223,8 +2362,8 @@ app.get('/', (req, res) => {
 
 // -------------------- Error handling --------------------
 app.use((req, res) => {
-  res.status(404).json({ 
-    success: false, 
+  res.status(404).json({
+    success: false,
     error: 'Endpoint not found',
     availableEndpoints: {
       root: '/',

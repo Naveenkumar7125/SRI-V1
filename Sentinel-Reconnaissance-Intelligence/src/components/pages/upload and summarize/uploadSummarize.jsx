@@ -61,14 +61,9 @@
 //   );
 // }
 
-
-
-import React, { useRef, useState, useEffect, useCallback } from "react";
-import "./UploadSummarize.css";
+import React, { useRef, useState, useEffect } from "react";
+import "./uploadSummarize.css";
 import io from 'socket.io-client';
-
-// WebSocket connection
-let socket = null;
 
 const LiveFeedPanel = ({ liveFrames, analysisProgress }) => {
   return (
@@ -85,8 +80,8 @@ const LiveFeedPanel = ({ liveFrames, analysisProgress }) => {
                 {analysisProgress.videoName} - {analysisProgress.progress}%
               </span>
               <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
+                <div
+                  className="progress-fill"
                   style={{ width: `${analysisProgress.progress}%` }}
                 ></div>
               </div>
@@ -106,8 +101,8 @@ const LiveFeedPanel = ({ liveFrames, analysisProgress }) => {
           liveFrames.map((frame, index) => (
             <div className="live-frame-card" key={index}>
               <div className="live-frame-image-container">
-                <img 
-                  src={frame.imageUrl} 
+                <img
+                  src={frame.imageUrl}
                   alt={frame.shortSummary}
                   className="live-frame-image"
                   onError={(e) => {
@@ -150,7 +145,7 @@ const EventTimeline = ({ events }) => {
         <div className="section-icon">🕒</div>
         <h4 className="section-title">Event Timeline</h4>
       </div>
-      
+
       <div className="timeline-container">
         {events.length === 0 ? (
           <div className="no-events">
@@ -165,8 +160,8 @@ const EventTimeline = ({ events }) => {
                 <div className="timeline-content">
                   <div className="timeline-summary">{event.summary}</div>
                   {event.imageUrl && (
-                    <img 
-                      src={event.imageUrl} 
+                    <img
+                      src={event.imageUrl}
                       alt={event.summary}
                       className="timeline-thumbnail"
                       onError={(e) => {
@@ -189,8 +184,8 @@ const ChatPanel = ({ onQuery, isConnected }) => {
     {
       id: 1,
       from: "assistant",
-      text: isConnected 
-        ? "Analysis ready. Ask about detections, timelines or request highlights." 
+      text: isConnected
+        ? "Analysis ready. Ask about detections, timelines or request highlights."
         : "Connecting to analysis server...",
     },
   ]);
@@ -198,7 +193,7 @@ const ChatPanel = ({ onQuery, isConnected }) => {
 
   const send = () => {
     if (!text.trim() || !isConnected) return;
-    
+
     const userMsg = { id: Date.now(), from: "user", text: text.trim() };
     setMessages((m) => [...m, userMsg]);
     setText("");
@@ -230,14 +225,13 @@ const ChatPanel = ({ onQuery, isConnected }) => {
         </div>
         <h4>Analysis Assistant</h4>
       </div>
-      
+
       <div className="chat-messages" role="log" aria-live="polite">
         {messages.map((m) => (
           <div
             key={m.id}
-            className={`chat-message ${
-              m.from === "assistant" ? "assistant" : "user"
-            }`}
+            className={`chat-message ${m.from === "assistant" ? "assistant" : "user"
+              }`}
           >
             <div className="msg-avatar">
               {m.from === "assistant" ? "🤖" : "👤"}
@@ -257,8 +251,8 @@ const ChatPanel = ({ onQuery, isConnected }) => {
           }}
           disabled={!isConnected}
         />
-        <button 
-          className="btn primary" 
+        <button
+          className="btn primary"
           onClick={send}
           disabled={!isConnected || !text.trim()}
         >
@@ -276,42 +270,46 @@ const AnalysisDashboard = ({ folderId, folderName, analysisData }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [showLiveFeed, setShowLiveFeed] = useState(true);
 
-  // Connect to WebSocket
+  // Connect to WebSocket using a ref so we don't leak connections
+  const socketRef = useRef(null);
+
   useEffect(() => {
     if (!folderId) return;
 
     // Connect to WebSocket server
-    socket = io('http://localhost:5000', {
-      transports: ['websocket'],
+    socketRef.current = io('http://localhost:5000', {
+      transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
     });
 
+    const socket = socketRef.current;
+
     socket.on('connect', () => {
       console.log('Connected to WebSocket server');
       setIsConnected(true);
-      
-      // Join the folder room
+
+      // Join the folder-specific room so we get analysis events
       socket.emit('join_folder', { folderId });
     });
 
     socket.on('connected', (data) => {
-      console.log('Server connected:', data);
+      console.log('Server acknowledged connection:', data);
     });
 
     socket.on('joined_folder', (data) => {
-      console.log('Joined folder:', data);
+      console.log('Joined analysis room:', data);
     });
 
-    // Handle live frames
+    // Handle live frames streamed from Python via server
     socket.on('live_frame', (frameData) => {
       console.log('Received live frame:', frameData);
       setLiveFrames(prev => {
         const newFrames = [frameData, ...prev.slice(0, 9)]; // Keep last 10 frames
         return newFrames;
       });
-      
+
       // Add to events timeline
       setEvents(prev => [...prev, {
         timestamp: frameData.timestamp,
@@ -321,7 +319,7 @@ const AnalysisDashboard = ({ folderId, folderName, analysisData }) => {
       }]);
     });
 
-    // Handle analysis progress
+    // Handle analysis progress updates
     socket.on('analysis_progress', (progressData) => {
       console.log('Analysis progress:', progressData);
       setAnalysisProgress(progressData);
@@ -338,9 +336,11 @@ const AnalysisDashboard = ({ folderId, folderName, analysisData }) => {
         message: 'Analysis completed!',
         videoName: 'All videos'
       });
-      
-      // Show completion message
-      alert(`Analysis completed! Found ${completeData.totalFrames} key frames.`);
+    });
+
+    socket.on('connect_error', (err) => {
+      console.warn('WebSocket connection error:', err.message);
+      setIsConnected(false);
     });
 
     socket.on('disconnect', () => {
@@ -352,12 +352,10 @@ const AnalysisDashboard = ({ folderId, folderName, analysisData }) => {
       console.error('WebSocket error:', error);
     });
 
-    // Cleanup on unmount
+    // Cleanup on unmount or when folderId changes
     return () => {
-      if (socket) {
-        socket.disconnect();
-        socket = null;
-      }
+      socket.disconnect();
+      socketRef.current = null;
     };
   }, [folderId]);
 
@@ -411,7 +409,7 @@ const AnalysisDashboard = ({ folderId, folderName, analysisData }) => {
             <div className={`status-dot ${isConnected ? 'connected' : 'disconnected'}`}></div>
             {isConnected ? 'LIVE' : 'OFFLINE'}
           </div>
-          <button 
+          <button
             className="btn secondary"
             onClick={() => setShowLiveFeed(!showLiveFeed)}
           >
@@ -423,27 +421,27 @@ const AnalysisDashboard = ({ folderId, folderName, analysisData }) => {
       <div className="dashboard-content">
         <div className="dashboard-left">
           {showLiveFeed && (
-            <LiveFeedPanel 
+            <LiveFeedPanel
               liveFrames={liveFrames}
               analysisProgress={analysisProgress}
             />
           )}
-          
+
           <EventTimeline events={events} />
         </div>
 
         <div className="dashboard-right">
-          <ChatPanel 
+          <ChatPanel
             onQuery={handleQuery}
             isConnected={isConnected}
           />
-          
+
           <div className="stats-panel">
             <div className="section-header">
               <div className="section-icon">📊</div>
               <h4 className="section-title">Real-time Statistics</h4>
             </div>
-            
+
             <div className="stats-grid">
               <div className="stat-card">
                 <div className="stat-icon">🖼️</div>
@@ -452,7 +450,7 @@ const AnalysisDashboard = ({ folderId, folderName, analysisData }) => {
                   <div className="stat-label">Live Frames</div>
                 </div>
               </div>
-              
+
               <div className="stat-card">
                 <div className="stat-icon">📅</div>
                 <div className="stat-content">
@@ -460,7 +458,7 @@ const AnalysisDashboard = ({ folderId, folderName, analysisData }) => {
                   <div className="stat-label">Total Events</div>
                 </div>
               </div>
-              
+
               <div className="stat-card">
                 <div className="stat-icon">⚡</div>
                 <div className="stat-content">
@@ -470,7 +468,7 @@ const AnalysisDashboard = ({ folderId, folderName, analysisData }) => {
                   <div className="stat-label">Progress</div>
                 </div>
               </div>
-              
+
               <div className="stat-card">
                 <div className="stat-icon">🔗</div>
                 <div className="stat-content">
@@ -480,14 +478,14 @@ const AnalysisDashboard = ({ folderId, folderName, analysisData }) => {
               </div>
             </div>
           </div>
-          
+
           {analysisData && (
             <div className="upload-details-panel">
               <div className="section-header">
                 <div className="section-icon">📋</div>
                 <h4 className="section-title">Analysis Details</h4>
               </div>
-              
+
               <div className="details-list">
                 <div className="detail-item">
                   <span className="detail-label">Folder ID:</span>
@@ -500,8 +498,8 @@ const AnalysisDashboard = ({ folderId, folderName, analysisData }) => {
                 <div className="detail-item">
                   <span className="detail-label">Status:</span>
                   <span className="detail-value" style={{
-                    color: analysisData.status === 'completed' ? '#10b981' : 
-                           analysisData.status === 'analyzing' ? '#f59e0b' : '#6b7280'
+                    color: analysisData.status === 'completed' ? '#10b981' :
+                      analysisData.status === 'analyzing' ? '#f59e0b' : '#6b7280'
                   }}>
                     {analysisData.status?.toUpperCase() || 'UNKNOWN'}
                   </span>
@@ -628,15 +626,15 @@ export default function UploadSummarize() {
   const onAnalyze = async () => {
     try {
       setIsUploading(true);
-      
+
       // Upload files to /api/upload endpoint
       const uploadData = await uploadToBackend();
-      
+
       console.log("Upload successful:", uploadData);
-      
+
       if (uploadData.success) {
         setUploadResult(uploadData);
-        
+
         // Fetch analysis data
         if (uploadData.folderId) {
           try {
@@ -649,12 +647,12 @@ export default function UploadSummarize() {
             console.error('Error fetching analysis status:', err);
           }
         }
-        
+
         setView("analyze");
       } else {
         throw new Error(uploadData.error || "Upload failed");
       }
-      
+
     } catch (err) {
       console.error("Upload error:", err);
       alert(`Upload failed: ${err.message}`);
@@ -670,12 +668,6 @@ export default function UploadSummarize() {
     setRequirements("");
     setUploadResult(null);
     setAnalysisData(null);
-    
-    // Disconnect WebSocket if connected
-    if (socket) {
-      socket.disconnect();
-      socket = null;
-    }
   };
 
   const formatBytes = (bytes) => {
@@ -759,7 +751,7 @@ export default function UploadSummarize() {
                   <span className="count">{files.length}</span>
                 </div>
                 {files.length > 0 && (
-                  <button 
+                  <button
                     className="btn danger small"
                     onClick={() => setFiles([])}
                   >
@@ -866,7 +858,7 @@ export default function UploadSummarize() {
             </div>
           </div>
 
-          <AnalysisDashboard 
+          <AnalysisDashboard
             folderId={uploadResult.folderId}
             folderName={uploadResult.folderName}
             analysisData={analysisData}
@@ -877,7 +869,7 @@ export default function UploadSummarize() {
               <div className="success-icon">✅</div>
               <h3>Upload Successful</h3>
             </div>
-            
+
             <div className="success-details">
               <div className="details-grid">
                 <div className="detail-card">
@@ -887,7 +879,7 @@ export default function UploadSummarize() {
                     <div className="detail-value">{uploadResult.folderName}</div>
                   </div>
                 </div>
-                
+
                 <div className="detail-card">
                   <div className="detail-icon">🎬</div>
                   <div className="detail-content">
@@ -895,7 +887,7 @@ export default function UploadSummarize() {
                     <div className="detail-value">{uploadResult.videos?.length || files.length}</div>
                   </div>
                 </div>
-                
+
                 <div className="detail-card">
                   <div className="detail-icon">🆔</div>
                   <div className="detail-content">
@@ -903,7 +895,7 @@ export default function UploadSummarize() {
                     <div className="detail-value code">{uploadResult.folderId}</div>
                   </div>
                 </div>
-                
+
                 <div className="detail-card">
                   <div className="detail-icon">⏱️</div>
                   <div className="detail-content">
@@ -914,7 +906,7 @@ export default function UploadSummarize() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="instructions">
                 <h4>What's happening:</h4>
                 <ul>

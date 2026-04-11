@@ -1785,7 +1785,7 @@
 //944
 
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import './Evidences.css';
 
@@ -1806,7 +1806,7 @@ function Evidences() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [totalEvents, setTotalEvents] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [playingVideo, setPlayingVideo] = useState(null);
+
   
   // Fetch initial events from database
   useEffect(() => {
@@ -2054,13 +2054,14 @@ function Evidences() {
     switch(event.event_type) {
       case 'VIDEO_RECORDED':
         return 'Video recording captured';
-      case 'FACE_MATCH':
+      case 'FACE_MATCH': {
         const persons = event.data?.persons || event.persons || [];
         if (persons.length > 0) {
           const names = persons.map(p => p.name).join(', ');
           return `Face match: ${names}`;
         }
         return 'Face match detected';
+      }
       case 'INTRUSION':
         return 'Security intrusion detected';
       case 'ANOMALY':

@@ -210,14 +210,12 @@ def summarize_from_bytes(img_bytes):
             contents=[{
                 "role": "user",
                 "parts": [
-                    {"text": "Give a CCTV-style short summary in 4-5 words."},
+                    {"text": "Provide a meaningful and insightful summary of this CCTV frame in 1-2 sentences. Describe key actions, people and objects visible in detail."},
                     {"inline_data": {"mime_type": "image/jpeg", "data": img_b64}}
                 ]
             }],
         )
-        text = result.text.strip()
-        words = text.split()
-        return " ".join(words[:5])
+        return result.text.strip()
     except:
         return "Activity detected"
 

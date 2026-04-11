@@ -800,17 +800,7 @@ const LiveFeedsSection = () => {
     7: cam07Img
   };
 
-  // Helper function to get camera display source
-  const getCameraDisplaySource = (cameraId, isModal = false) => {
-    const isStaticImageCam = [3, 5, 6, 7].includes(cameraId);
-    
-    if (isStaticImageCam) {
-      return staticCamImages[cameraId];
-    }
-    
-    // For other cameras that use backend stream
-    return `${API_BASE}/camera_stream/${cameraId}`;
-  };
+
 
   // Robust loop setup for sample videos: ensures loop property + ended handler
   useEffect(() => {
@@ -831,7 +821,7 @@ const LiveFeedsSection = () => {
           if (el.duration && !isNaN(el.duration)) el.currentTime = 0;
           const p = el.play();
           if (p && typeof p.catch === "function") p.catch(() => {});
-        } catch (err) {}
+        } catch (_err) { /* empty */ }
       };
 
       el.addEventListener("ended", onEnded);
@@ -847,7 +837,7 @@ const LiveFeedsSection = () => {
       handlers.forEach(({ el, onEnded }) => {
         try {
           el.removeEventListener("ended", onEnded);
-        } catch (err) {}
+        } catch (_err) { /* empty */ }
       });
     };
   });

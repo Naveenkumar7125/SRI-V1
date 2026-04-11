@@ -196,10 +196,12 @@ export default function AnalysisView({
   setIsProcessingQuery(true);
 
   try {
+    const activeFolderId = liveVideoInfo?.folderId || (analysisResults?.length > 0 ? analysisResults[0].folderId : null);
+
     const res = await fetch("http://localhost:5000/api/chat/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query }),
+      body: JSON.stringify({ query, folderId: activeFolderId }),
     });
 
     const data = await res.json();
@@ -235,71 +237,54 @@ export default function AnalysisView({
 
       {/* LEFT SIDE — AI CHAT */}
       <div className="analysis-left">
-        <Card className="analysis-chat-card">
-          <div className="analysis-chat-header">
-            <Sparkles className="icon-sm tactical-colour" />
-            <h3 className="analysis-chat-title">Analysis Assistant</h3>
+        <div className="chat-panel">
+          <div className="chat-header">
+            <h3 className="dashboard-title"><Sparkles className="icon-sm tactical-colour" /> Analysis Assistant</h3>
           </div>
 
-          <div className="analysis-chat-body">
+          <div className="chat-messages">
             {chatMessages.map((message) => (
               <div
                 key={message.id}
-                className={
-                  message.type === "user"
-                    ? "chat-row chat-row-right"
-                    : "chat-row chat-row-left"
-                }
+                className={`chat-message ${message.type === "user" ? "user" : "assistant"}`}
               >
-                <div
-                  className={
-                    message.type === "user"
-                      ? "chat-bubble chat-bubble-user"
-                      : "chat-bubble chat-bubble-assistant"
-                  }
-                >
-                  <p className="chat-text">{message.content}</p>
-                  <p className="chat-time">
-                    {message.timestamp.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
+                <div className="msg-avatar">
+                  {message.type === "user" ? "U" : <Sparkles size={16} />}
+                </div>
+                <div className="msg-text">
+                  <p>{message.content}</p>
                 </div>
               </div>
             ))}
 
             {isProcessingQuery && (
-              <div className="chat-row chat-row-left">
-                <div className="chat-bubble chat-bubble-assistant">
-                  <div className="typing-dots">
-                    <div className="dot" />
-                    <div className="dot" />
-                    <div className="dot" />
-                  </div>
+              <div className="chat-message assistant">
+                <div className="msg-avatar"><Sparkles size={16} /></div>
+                <div className="msg-text">
+                  <div className="loading-spinner" style={{borderColor: "rgba(0,0,0,0.1)", borderTopColor: "#3b82f6"}}></div>
                 </div>
               </div>
             )}
           </div>
 
-          <div className="analysis-chat-footer">
+          <div className="chat-input" style={{display: 'flex', gap: '10px'}}>
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
               placeholder="Ask about events, suspicious segments, or time ranges..."
-              className="analysis-input"
               disabled={isProcessingQuery}
+              style={{flex: 1}}
             />
             <Button
               onClick={handleSendQuery}
               disabled={!query.trim() || isProcessingQuery}
-              className="primary-btn-icon"
+              className="btn primary"
             >
-              <Sparkles className="icon-sm" />
+              <Sparkles className="icon-sm" /> Send
             </Button>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* RIGHT SIDE — LIVE + FINAL ANALYSIS */}
