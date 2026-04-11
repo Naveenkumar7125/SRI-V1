@@ -88,30 +88,29 @@ export default function HistoryDetailView() {
     }
   };
 
-  if (loading) return <div style={{ padding: 40, color: '#fff' }}>Loading Archive Data...</div>;
-  if (!folderData) return <div style={{ padding: 40, color: '#fff' }}>Record not found.</div>;
+  if (loading) return <div style={{ padding: 40, color: '#1e293b' }}>Loading Archive Data...</div>;
+  if (!folderData) return <div style={{ padding: 40, color: '#1e293b' }}>Record not found.</div>;
 
   const video = folderData.videos?.[0];
   const frames = video?.detectedFrames || [];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#0f1219' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#f8fafc' }}>
       {/* Top Header */}
-      <div style={{ padding: '20px 30px', borderBottom: '1px solid #1f2937', display: 'flex', alignItems: 'center' }}>
-        <button onClick={() => navigate('/history')} style={{ marginRight: 20, background: 'none', border: 'none', color: '#63b3ed', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+      <div style={{ padding: '20px 30px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center' }}>
+        <button onClick={() => navigate('/history')} style={{ marginRight: 20, background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
           <ArrowLeft size={18} style={{ marginRight: 5 }}/> Back to Archive
         </button>
-        <h2 style={{ margin: 0, color: '#fff', fontSize: '1.4rem' }}>{folderData.name}</h2>
+        <h2 style={{ margin: 0, color: '#1e293b', fontSize: '1.4rem' }}>{folderData.name}</h2>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'row', height: 'calc(100vh - 80px)', overflow: 'hidden' }}>
         
         {/* LEFT SIDE — AI CHAT */}
-        <div style={{ flex: '0 0 400px', height: '100%', overflowY: 'auto', padding: '20px', borderRight: '1px solid #1f2937' }}>
-          <div className="chat-panel" style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#1a202c', borderRadius: 12 }}>
-            <div className="chat-header" style={{ padding: '20px', borderBottom: '1px solid #2d3748' }}>
-              <h3 className="dashboard-title"><Sparkles className="icon-sm tactical-colour" /> Archive Assistant</h3>
-            </div>
+        <div style={{ flex: '0 0 400px', height: '100%', display: 'flex', flexDirection: 'column', background: 'white', borderRight: '1px solid #e2e8f0' }}>
+          <div className="chat-header" style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0' }}>
+            <h3 className="dashboard-title"><Sparkles className="icon-sm tactical-colour" /> Archive Assistant</h3>
+          </div>
 
             <div className="chat-messages" style={{ flex: 1, overflowY: 'auto' }}>
               {chatMessages.map((message) => (
@@ -155,14 +154,12 @@ export default function HistoryDetailView() {
                 <Sparkles className="icon-sm" /> Send
               </Button>
             </div>
-          </div>
         </div>
-
         {/* RIGHT SIDE — HISTORICAL FRAMES */}
-        <div style={{ flex: 1, height: '100%', overflowY: 'auto', padding: '20px' }}>
+        <div style={{ flex: 1, height: '100%', overflowY: 'auto', padding: '30px 40px' }}>
           
           <div className="live-frames-container" style={{ marginTop: 0 }}>
-            <h3 style={{marginTop: 0, marginBottom: '20px', color: '#fff'}}>
+            <h3 style={{marginTop: 0, marginBottom: '24px', color: '#1e293b', fontSize: '1.5rem'}}>
               Historical Detected Frames ({frames.length})
             </h3>
             
@@ -174,10 +171,11 @@ export default function HistoryDetailView() {
               }}>
                 {frames.map((frame, i) => (
                   <div className="live-frame-card" key={i} style={{
-                    background: '#1a202c', 
-                    border: '1px solid #2d3748', 
+                    background: 'white', 
+                    border: '1px solid #e2e8f0', 
                     borderRadius: '8px', 
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
                   }}>
                     <img src={frame.imageUrl} className="live-frame-thumb" alt="live" style={{
                       width: '100%', 
@@ -186,7 +184,7 @@ export default function HistoryDetailView() {
                     }}/>
                     <div style={{ padding: '12px' }}>
                       <p className="frame-summary" style={{
-                        color: '#e2e8f0', 
+                        color: '#475569', 
                         fontSize: '0.9rem', 
                         marginBottom: '8px', 
                         lineHeight: 1.4
@@ -194,7 +192,7 @@ export default function HistoryDetailView() {
                         {frame.shortSummary}
                       </p>
                       <p style={{
-                        color: '#63b3ed', 
+                        color: '#3b82f6', 
                         fontSize: '0.8rem', 
                         fontWeight: 'bold', 
                         margin: 0
@@ -206,7 +204,7 @@ export default function HistoryDetailView() {
                 ))}
               </div>
             ) : (
-              <p style={{color: '#a0aec0'}}>No frames found in this historical record.</p>
+              <p style={{color: '#64748b'}}>No frames found in this historical record.</p>
             )}
           </div>
 
