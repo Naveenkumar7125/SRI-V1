@@ -300,16 +300,29 @@ export default function AnalysisView({
         )}
 
         {liveFrames.length > 0 && (
-          <div className="live-stream-frames">
-            <h4>Real-Time Frames ({liveFrames.length})</h4>
+          <div className="live-stream-frames" style={{ marginTop: "30px", marginBottom: "30px" }}>
+            <div className="section-header" style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "20px" }}>
+              <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ef4444", animation: "pulse 2s infinite" }}></div>
+              <h4 className="section-title">Real-Time Frames ({liveFrames.length})</h4>
+            </div>
 
-            <div className="live-frame-grid">
+            <div className="live-frames-container">
               {liveFrames.map((frame, i) => (
                 <div className="live-frame-card" key={i}>
-                  <img src={frame.imageUrl} className="live-frame-thumb" alt="live" />
-                  <p className="live-frame-meta">
-                    <b>{frame.timestamp}</b> – {frame.shortSummary}
-                  </p>
+                  <div className="live-frame-image-container">
+                    <img src={frame.imageUrl} className="live-frame-image" alt="live" />
+                    <div className="live-frame-overlay">
+                      <span className="frame-timestamp">{frame.timestamp}</span>
+                      <span className="detected-badge">Detected</span>
+                    </div>
+                  </div>
+                  <div className="live-frame-details">
+                    <div className="frame-meta" style={{ marginBottom: "8px" }}>
+                      <span className="video-name">{frame.videoName || "Live Capture"}</span>
+                      <span className="objects-list">{frame.duration || "N/A"}</span>
+                    </div>
+                    <p className="frame-summary">{frame.shortSummary}</p>
+                  </div>
                 </div>
               ))}
             </div>

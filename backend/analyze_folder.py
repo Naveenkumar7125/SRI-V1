@@ -86,12 +86,11 @@ except Exception:
 import cloudinary
 import cloudinary.uploader
 
-# Gemini
-try:
-    from google import genai
-    GENAI_AVAILABLE = True
-except Exception:
-    GENAI_AVAILABLE = False
+# Gemini Configuration
+GENAI_API_KEY = os.environ.get("API_KEY")
+GENAI_AVAILABLE = bool(GENAI_API_KEY)
+if not GENAI_AVAILABLE:
+    print("GENAI_API_KEY NOT SET in environment!")
 
 # -------------------------
 # CONFIG
@@ -112,8 +111,8 @@ CLOUDINARY_FOLDER = "events/"
 
 GENAI_API_KEY = os.environ.get("API_KEY")
 
-FRAME_SKIP = 15
-THROTTLE_SECONDS = 0.15
+FRAME_SKIP = 30
+THROTTLE_SECONDS = 4.0
 # -------------------------
 
 cloudinary.config(
@@ -121,9 +120,6 @@ cloudinary.config(
     api_key=CLOUDINARY_API_KEY,
     api_secret=CLOUDINARY_API_SECRET
 )
-
-if GENAI_AVAILABLE:
-    client = genai.Client(api_key=GENAI_API_KEY)
 
 if YOLO_AVAILABLE:
     try:
@@ -197,27 +193,41 @@ def upload_frame_to_cloudinary(frame_bgr):
         return None, None, None
 
 # -------------------------
-# Short summary using Gemini
+# Short summary using Gemini (REST API)
 # -------------------------
 def summarize_from_bytes(img_bytes):
     if not GENAI_AVAILABLE:
-        return "Activity detected"
+        return "No summary: Gemini API key not available"
 
     try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GENAI_API_KEY}"
+        
+        headers = {"Content-Type": "application/json"}
         img_b64 = base64.b64encode(img_bytes).decode("utf-8")
-        result = client.models.generate_content(
-            model="models/gemini-2.0-flash-lite",
-            contents=[{
-                "role": "user",
+        
+        prompt = "Provide a meaningful, concise, and insightful summary of this CCTV frame in 1-2 sentences. Focus on identifying specific actions, individuals, objects, and any potential security threats. Avoid vague language."
+        
+        payload = {
+            "contents": [{
                 "parts": [
-                    {"text": "Provide a meaningful and insightful summary of this CCTV frame in 1-2 sentences. Describe key actions, people and objects visible in detail."},
+                    {"text": prompt},
                     {"inline_data": {"mime_type": "image/jpeg", "data": img_b64}}
                 ]
-            }],
-        )
-        return result.text.strip()
-    except:
-        return "Activity detected"
+            }]
+        }
+        
+        resp = requests.post(url, headers=headers, json=payload)
+        resp_data = resp.json()
+        
+        if resp.status_code == 200:
+            return resp_data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        else:
+            print("GEMINI API ERROR (REST):", resp_data)
+            return "Summary failed: Model returned error."
+            
+    except Exception as e:
+        print("GEMINI API ERROR:", e)
+        return f"Summary failed: {str(e)[:50]}"
 
 # -------------------------
 # Time formatting
