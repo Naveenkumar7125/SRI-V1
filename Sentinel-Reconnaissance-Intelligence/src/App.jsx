@@ -9,6 +9,8 @@ import UploadSummarize from "./components/pages/upload and summarize/uploadSumma
 import CaseManagement from "./components/pages/cases/CaseManagement";
 import Evidences from "./components/pages/Evidences/Evidences";
 import Settings from "./components/pages/settings/Settings";
+import HistoryArchive from "./components/pages/history/HistoryArchive";
+import HistoryDetailView from "./components/pages/history/HistoryDetailView";
 import "./App.css";
 
 // Wrapper layout
@@ -28,6 +30,8 @@ function Layout() {
           <Route path="/live" element={<Evidences />} />
           <Route path="/teams" element={<Teams />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/history" element={<HistoryArchive />} />
+          <Route path="/history/:folderId" element={<HistoryDetailView />} />
         </Routes>
       </main>
     </div>

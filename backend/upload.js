@@ -3,6 +3,7 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const { spawn } = require("child_process");
+const Folder = require("./models/Folder");
 
 const router = express.Router();
 
@@ -117,46 +118,53 @@ router.post("/upload", upload.array("files"), (req, res) => {
       });
 
       py.stdout.on("data", (d) => {
-        const line = d.toString().trim();
-        console.log("PYTHON:", line);
+        const chunk = d.toString();
+        const lines = chunk.split('\n');
+        
+        for (let line of lines) {
+          line = line.trim();
+          if (!line) continue;
+          
+          // Try to parse structured progress updates from Python
+          try {
+            const parsed = JSON.parse(line);
+            if (parsed.type === "frame" && io) {
+              // Store in memory
+              if (analysisStore[folderId]) {
+                analysisStore[folderId].keyFrames.push(parsed);
+                analysisStore[folderId].events.push({
+                  timestamp: parsed.timestamp,
+                  summary: parsed.shortSummary,
+                  imageUrl: parsed.imageUrl,
+                });
+                analysisStore[folderId].progress = parsed.progress || 0;
+              }
 
-        // Try to parse structured progress updates from Python
-        try {
-          const parsed = JSON.parse(line);
-          if (parsed.type === "frame" && io) {
-            // Store in memory
-            if (analysisStore[folderId]) {
-              analysisStore[folderId].keyFrames.push(parsed);
-              analysisStore[folderId].events.push({
-                timestamp: parsed.timestamp,
-                summary: parsed.shortSummary,
-                imageUrl: parsed.imageUrl,
-              });
-              analysisStore[folderId].progress = parsed.progress || 0;
+              // Broadcast to frontend via Socket.IO room
+              if (io) {
+                io.to(`folder_${folderId}`).emit("live_frame", parsed);
+                io.to(`folder_${folderId}`).emit("analysis_progress", {
+                  folderId,
+                  progress: parsed.progress || 0,
+                  videoName: parsed.videoName || targetFolderName,
+                });
+              }
+            } else if (parsed.type === "complete") {
+              if (analysisStore[folderId]) {
+                analysisStore[folderId].status = "completed";
+                analysisStore[folderId].progress = 100;
+              }
+              if (io) {
+                io.to(`folder_${folderId}`).emit("analysis_complete", {
+                  folderId,
+                  totalFrames: (analysisStore[folderId]?.keyFrames || []).length,
+                  message: "Analysis completed!",
+                });
+              }
             }
-
-            // Broadcast to frontend via Socket.IO room
-            if (io) {
-              io.to(`folder_${folderId}`).emit("live_frame", parsed);
-              io.to(`folder_${folderId}`).emit("analysis_progress", {
-                folderId,
-                progress: parsed.progress || 0,
-                videoName: parsed.videoName || targetFolderName,
-              });
-            }
-          } else if (parsed.type === "complete" && io) {
-            if (analysisStore[folderId]) {
-              analysisStore[folderId].status = "completed";
-              analysisStore[folderId].progress = 100;
-            }
-            io.to(`folder_${folderId}`).emit("analysis_complete", {
-              folderId,
-              totalFrames: (analysisStore[folderId]?.keyFrames || []).length,
-              message: "Analysis completed!",
-            });
+          } catch (_) {
+            console.log("PYTHON MSG:", line); // If not JSON, print text
           }
-        } catch (_) {
-          // Not JSON — just a plain log line, ignore
         }
       });
 
@@ -164,11 +172,52 @@ router.post("/upload", upload.array("files"), (req, res) => {
         console.log("PYTHON ERROR:", d.toString().trim());
       });
 
-      py.on("close", (code) => {
+      py.on("close", async (code) => {
         console.log(`Python analysis finished with code ${code}`);
-        if (analysisStore[folderId] && analysisStore[folderId].status !== "completed") {
-          analysisStore[folderId].status = code === 0 ? "completed" : "error";
-          analysisStore[folderId].progress = 100;
+        if (analysisStore[folderId]) {
+          if (analysisStore[folderId].status !== "completed") {
+            analysisStore[folderId].status = code === 0 ? "completed" : "error";
+            analysisStore[folderId].progress = 100;
+          }
+
+          if (!analysisStore[folderId].savedToDB) {
+            analysisStore[folderId].savedToDB = true;
+            
+            // -----------------------------------------------------
+            // 💾 SAVE TO MONGODB (History Archive)
+            // -----------------------------------------------------
+            try {
+              const data = analysisStore[folderId];
+              const videoData = {
+                originalName: targetFolderName,
+                videoUrl: "", // Optional
+                duration: "0", 
+                shortSummary: "Analysis output completed.", 
+                finalSummary: "Analysis completed.",
+                threatLevel: "low",
+                confidence: 95,
+                timeline: data.events.map(ev => ({ time: ev.timestamp, event: ev.summary })),
+                detectedFrames: data.keyFrames.map(f => ({
+                  timestamp: f.timestamp,
+                  duration: f.duration,
+                  imageUrl: f.imageUrl,
+                  shortSummary: f.shortSummary
+                }))
+              };
+
+              await Folder.create({
+                name: targetFolderName,
+                description: "Automated analysis session",
+                createdBy: "System",
+                videos: [videoData]
+              });
+              console.log(`✅ MongoDB Archive Saved for folder: ${targetFolderName}`);
+            } catch (dbErr) {
+              console.error("❌ Failed to save history to MongoDB:", dbErr);
+            }
+          }
+
+
           if (io) {
             io.to(`folder_${folderId}`).emit("analysis_complete", {
               folderId,

@@ -10,6 +10,7 @@ const menuItems = [
   { key: "upload", label: "Report Generator", icon: "report" },
   { key: "live", label: "Evidences", icon: "evidence" },
   { key: "cases", label: "Case", icon: "case" },
+  { key: "history", label: "Analysis Archive", icon: "archive" },
   { key: "settings", label: "Settings", icon: "settings" },
 ];
 
@@ -19,6 +20,7 @@ const routeMap = {
   upload: "/upload",
   live: "/live",
   cases: "/cases",
+  history: "/history",
   settings: "/settings",
 };
 
@@ -94,6 +96,8 @@ useEffect(() => {
         return <CaseIcon />;
       case "unit":
         return <UnitIcon />;
+      case "archive":
+        return <ArchiveIcon />;
       case "settings":
         return <SettingsIcon />;
       default:
@@ -338,6 +342,23 @@ const SettingsIcon = () => (
     <path
       d="M19.4 15a1.8 1.8 0 0 0 .34 2l.06.06a1.4 1.4 0 0 1-2 2l-.06-.06a1.8 1.8 0 0 0-2-.34 1.8 1.8 0 0 0-1 1.6V21a1.4 1.4 0 0 1-2.8 0v-.12a1.8 1.8 0 0 0-1-1.6 1.8 1.8 0 0 0-2 .34l-.06.06a1.4 1.4 0 0 1-2-2l.06-.06a1.8 1.8 0 0 0 .34-2 1.8 1.8 0 0 0-1.6-1H3a1.4 1.4 0 0 1 0-2.8h.12a1.8 1.8 0 0 0 1.6-1 1.8 1.8 0 0 0-.34-2l-.06-.06a1.4 1.4 0 1 1 2-2l.06.06a1.8 1.8 0 0 0 2 .34 1.8 1.8 0 0 0 1-1.6V3a1.4 1.4 0 0 1 2.8 0v.12a1.8 1.8 0 0 0 1 1.6 1.8 1.8 0 0 0 2-.34l.06-.06a1.4 1.4 0 0 1 2 2l-.06.06a1.8 1.8 0 0 0-.34 2 1.8 1.8 0 0 0 1.6 1H21a1.4 1.4 0 0 1 0 2.8h-.12a1.8 1.8 0 0 0-1.6 1Z"
       strokeWidth="1.3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const ArchiveIcon = () => (
+  <svg
+    className="menu-icon"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+  >
+    <rect x="2" y="4" width="20" height="5" rx="1" ry="1" strokeWidth="1.7" />
+    <path
+      d="M4 9v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9M10 13h4"
+      strokeWidth="1.7"
       strokeLinecap="round"
       strokeLinejoin="round"
     />

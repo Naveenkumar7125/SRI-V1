@@ -32,7 +32,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 
 const model = genAI.getGenerativeModel({
-  model: "models/gemini-2.0-flash-lite"
+  model: "models/gemini-2.5-flash"
 });
 
 module.exports = model;

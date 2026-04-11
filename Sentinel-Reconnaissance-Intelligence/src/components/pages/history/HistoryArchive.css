@@ -1,0 +1,93 @@
+.history-archive-container {
+  padding: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: #fff;
+  min-height: 100vh;
+}
+
+.archive-header {
+  margin-bottom: 40px;
+}
+
+.archive-header h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #fff;
+}
+
+.archive-header p {
+  color: #a0aec0;
+  font-size: 1.1rem;
+}
+
+.loading-spinner, .empty-state {
+  text-align: center;
+  padding: 50px;
+  color: #a0aec0;
+  font-size: 1.2rem;
+}
+
+.archive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.archive-card {
+  background: #1a202c;
+  border: 1px solid #2d3748;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.archive-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  border-color: #4299e1;
+}
+
+.archive-cover {
+  width: 100%;
+  height: 180px;
+  background: #000;
+}
+
+.archive-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.archive-info {
+  padding: 16px;
+}
+
+.archive-info h3 {
+  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.archive-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #a0aec0;
+}
+
+.archive-count {
+  background: rgba(66, 153, 225, 0.2);
+  color: #63b3ed;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}

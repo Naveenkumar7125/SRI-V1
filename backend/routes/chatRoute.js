@@ -1,7 +1,7 @@
-// routes/chatRoute.js
 const express = require("express");
 const model = require("../config/gemini.js");
-const uploadRoute = require("../upload.js"); // Get the in-memory store
+const uploadRoute = require("../upload.js");
+const Folder = require("../models/Folder.js");
 
 const router = express.express ? express.Router() : require('express').Router();
 
@@ -13,7 +13,17 @@ router.post("/ask", async (req, res) => {
     }
 
     const store = uploadRoute.analysisStore || {};
-    const folderData = folderId && store[folderId] ? store[folderId] : store;
+    let folderData = null;
+    
+    if (folderId && store[folderId]) {
+      folderData = store[folderId];
+    } else if (folderId) {
+      // Not in live memory? Hit MongoDB Archive!
+      const historical = await Folder.findById(folderId).lean();
+      if (historical) folderData = historical;
+    } else {
+      folderData = store;
+    }
 
     // Build AI prompt using the analysis dataset
     const prompt = `

@@ -1697,6 +1697,7 @@ app.use(express.urlencoded({ extended: true }));
 // Mount upload routes (must be before other routes)
 app.use('/api', uploadRoute);
 app.use('/api/chat', chatRoute);
+app.use('/api/history', require('./routes/historyRoutes'));
 
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
@@ -1714,13 +1715,14 @@ const io = socketIo(server, {
 const MONGODB_URI_SRI = process.env.MONGODB_URI_SRI ||
   'mongodb+srv://naveenkumart906_db_user:JrY0q4QoPtIhGRfz@nk.wpf1cvv.mongodb.net/SRI?retryWrites=true&w=majority&appName=NK';
 
-// Create connection to SRI database
-const sriConn = mongoose.createConnection(MONGODB_URI_SRI, {
+// Unify connection to prevent TLS EADDRINUSE / ECONNRESET collisions
+mongoose.connect(MONGODB_URI_SRI, {
   serverSelectionTimeoutMS: 5000,
   family: 4
-});
+}).then(() => console.log('✅ Unified Global Mongoose connected to SRI'))
+  .catch(err => console.error('❌ Unified Mongoose connection error:', err));
 
-sriConn.on('connected', () => console.log('✅ Connected to MongoDB SRI database'));
+const sriConn = mongoose.connection;
 sriConn.on('error', (err) => console.error('❌ SRI connection error:', err));
 sriConn.on('disconnected', () => console.warn('⚠️ SRI connection disconnected'));
 
