@@ -112,49 +112,50 @@ export default function HistoryDetailView() {
             <h3 className="dashboard-title"><Sparkles className="icon-sm tactical-colour" /> Archive Assistant</h3>
           </div>
 
-            <div className="chat-messages" style={{ flex: 1, overflowY: 'auto' }}>
-              {chatMessages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`chat-message ${message.type === "user" ? "user" : "assistant"}`}
-                >
-                  <div className="msg-avatar">
-                    {message.type === "user" ? "U" : <Sparkles size={16} />}
-                  </div>
-                  <div className="msg-text">
-                    <p>{message.content}</p>
-                  </div>
-                </div>
-              ))}
-
-              {isProcessingQuery && (
-                <div className="chat-message assistant">
-                  <div className="msg-avatar"><Sparkles size={16} /></div>
-                  <div className="msg-text">
-                    <div className="loading-spinner" style={{borderColor: "rgba(0,0,0,0.1)", borderTopColor: "#3b82f6"}}></div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="chat-input" style={{display: 'flex', gap: '10px'}}>
-              <Input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={handleKeyPress}
-                placeholder="Ask about events, suspicious segments, or time ranges..."
-                disabled={isProcessingQuery}
-                style={{flex: 1}}
-              />
-              <Button
-                onClick={handleSendQuery}
-                disabled={!query.trim() || isProcessingQuery}
-                className="btn primary"
+          <div className="chat-messages" style={{ flex: 1, overflowY: 'auto' }}>
+            {chatMessages.map((message) => (
+              <div
+                key={message.id}
+                className={`chat-message ${message.type === "user" ? "user" : "assistant"}`}
               >
-                <Sparkles className="icon-sm" /> Send
-              </Button>
-            </div>
+                <div className="msg-avatar">
+                  {message.type === "user" ? "U" : <Sparkles size={16} />}
+                </div>
+                <div className="msg-text">
+                  <p>{message.content}</p>
+                </div>
+              </div>
+            ))}
+
+            {isProcessingQuery && (
+              <div className="chat-message assistant">
+                <div className="msg-avatar"><Sparkles size={16} /></div>
+                <div className="msg-text">
+                  <div className="loading-spinner" style={{borderColor: "rgba(0,0,0,0.1)", borderTopColor: "#3b82f6"}}></div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="chat-input" style={{display: 'flex', gap: '10px', padding: '20px'}}>
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyPress}
+              placeholder="Ask about events..."
+              disabled={isProcessingQuery}
+              style={{flex: 1}}
+            />
+            <Button
+              onClick={handleSendQuery}
+              disabled={!query.trim() || isProcessingQuery}
+              className="btn primary"
+            >
+              <Sparkles className="icon-sm" /> Send
+            </Button>
+          </div>
         </div>
+
         {/* RIGHT SIDE — HISTORICAL FRAMES */}
         <div style={{ flex: 1, height: '100%', overflowY: 'auto', padding: '30px 40px' }}>
           
@@ -207,8 +208,8 @@ export default function HistoryDetailView() {
               <p style={{color: '#64748b'}}>No frames found in this historical record.</p>
             )}
           </div>
-
         </div>
+
       </div>
     </div>
   );

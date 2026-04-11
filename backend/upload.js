@@ -115,6 +115,7 @@ router.post("/upload", upload.array("files"), (req, res) => {
 
       const py = spawn(pythonPath, [scriptPath, targetFolderName], {
         cwd: BACKEND_DIR,
+        env: { ...process.env, PYTHONIOENCODING: 'utf-8' }
       });
 
       py.stdout.on("data", (d) => {

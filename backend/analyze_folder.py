@@ -75,12 +75,20 @@ import cv2
 
 load_dotenv()
 
-# Optional YOLO
+# Inject Custom ML Paths
+import sys
+sys.path.append(r"d:\SIH_2025\SRI_v1\Models\Tracking")
+
 try:
-    from ultralytics import YOLO
-    YOLO_AVAILABLE = True
-except Exception:
-    YOLO_AVAILABLE = False
+    from FaceRecognition import load_known_faces, recognize_faces
+    print("⏳ Initializing DeepFace Resnet / MTCNN models. Loading targeted faces...")
+    KNOWN_FACES_DIR = r"d:\SIH_2025\SRI_v1\Models\Tracking\known_faces"
+    known_embeddings, known_names = load_known_faces(KNOWN_FACES_DIR)
+    FACE_REC_AVAILABLE = True
+    print(f"✅ Securely loaded {len(known_names)} Target Encodings: {known_names}")
+except Exception as e:
+    print("[ERROR] Face Recognition initialization failed:", e)
+    FACE_REC_AVAILABLE = False
 
 # Cloudinary
 import cloudinary
@@ -121,11 +129,7 @@ cloudinary.config(
     api_secret=CLOUDINARY_API_SECRET
 )
 
-if YOLO_AVAILABLE:
-    try:
-        model = YOLO("yolov8n.pt")
-    except Exception:
-        YOLO_AVAILABLE = False
+
 
 # ---------------------------------------------------------
 # Helper: INIT CALL – Creates folder & video only ONCE
@@ -200,7 +204,7 @@ def summarize_from_bytes(img_bytes):
         return "No summary: Gemini API key not available"
 
     try:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GENAI_API_KEY}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GENAI_API_KEY}"
         
         headers = {"Content-Type": "application/json"}
         img_b64 = base64.b64encode(img_bytes).decode("utf-8")
@@ -258,6 +262,7 @@ def analyze_video(path, folder_name):
 
     frame_idx = 0
     pushed = 0
+    seen_faces = set()  # Global session HashSet to aggressively prevent duplicate processing
 
     while True:
         ret, frame = cap.read()
@@ -275,16 +280,30 @@ def analyze_video(path, folder_name):
         timestamp = format_time_hhmmss(ts)
         duration = format_duration(interval / fps)
 
-        # ---- YOLO ----
+        # ---- TARGETED FACE RECOGNITION ALGORITHM ----
         annotated = frame.copy()
-        if YOLO_AVAILABLE:
-            try:
-                result = model(frame)
-                annotated = result[0].plot()
-            except:
-                annotated = frame.copy()
+        target_detected = False
+        
+        if FACE_REC_AVAILABLE:
+            results = recognize_faces(frame, known_embeddings, known_names, threshold=0.45)
+            # Extrapolate explicitly identified targets
+            detected_targets = [res for res in results if res[0] != "Unknown"]
+            
+            for name, score, box in detected_targets:
+                if name not in seen_faces:
+                    seen_faces.add(name)
+                    target_detected = True
+                    # Vigorously map tracking boxes on the target's geometry natively
+                    x1, y1, x2, y2 = [int(v) for v in box]
+                    cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    cv2.putText(annotated, f"TARGET MATCH: {name} ({score:.2f})", (x1, max(y1-10, 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
-        # ---- CLOUDINARY UPLOAD ----
+        # ---- HASHSET SILENT REJECTION ----
+        # If no targeted faces were found in this frame (or they've already been logged earlier), skip!
+        if not target_detected:
+            continue
+
+        # ---- SECURE CLOUDINARY UPLOAD ----
         uid, img_url, img_bytes = upload_frame_to_cloudinary(annotated)
         if not img_url:
             continue
