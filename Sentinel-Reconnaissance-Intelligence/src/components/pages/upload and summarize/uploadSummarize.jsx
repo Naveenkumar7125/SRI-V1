@@ -670,6 +670,112 @@ export default function UploadSummarize() {
     setAnalysisData(null);
   };
 
+  const handleExportPDF = async () => {
+    if (!uploadResult) return;
+    try {
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF("p", "mm", "a4");
+      
+      const loadImage = (url) => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = "Anonymous";
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            const dataUrl = canvas.toDataURL("image/jpeg");
+            resolve(dataUrl);
+          };
+          img.onerror = () => resolve(null);
+          img.src = url;
+        });
+      };
+      
+      doc.setFontSize(22);
+      doc.text("Analysis Results Report", 14, 22);
+      
+      doc.setFontSize(12);
+      doc.text(`Folder Name: ${uploadResult.folderName}`, 14, 32);
+      doc.text(`Upload ID: ${uploadResult.folderId}`, 14, 40);
+      doc.text(`Started At: ${new Date(uploadResult.createdAt).toLocaleString()}`, 14, 48);
+      
+      doc.setFontSize(16);
+      doc.text("Detected Frames & Timeline Summary", 14, 62);
+      
+      const res = await fetch(`http://localhost:5000/api/get-events/${uploadResult.folderId}`);
+      let events = [];
+      let frames = [];
+      if (res.ok) {
+        const data = await res.json();
+        events = data.events || [];
+        frames = data.keyFrames || [];
+      }
+      
+      const allItems = [...frames, ...events];
+      const uniqueItems = Array.from(new Map(allItems.map(item => [item.timestamp, item])).values());
+      uniqueItems.sort((a, b) => (a.timestamp > b.timestamp ? 1 : -1));
+
+      if (uniqueItems.length === 0) {
+        doc.setFontSize(12);
+        doc.text("No events detected yet.", 14, 72);
+      } else {
+        let yPos = 72;
+        for (let i = 0; i < uniqueItems.length; i++) {
+          const item = uniqueItems[i];
+          if (yPos > 250) {
+            doc.addPage();
+            yPos = 20;
+          }
+          
+          doc.setFontSize(10);
+          doc.setTextColor(100);
+          doc.text(`Time: ${item.timestamp}`, 14, yPos);
+          
+          doc.setTextColor(0);
+          doc.setFontSize(11);
+          const text = item.shortSummary || item.summary || "Event detected";
+          const splitSummary = doc.splitTextToSize(text, 110);
+          doc.text(splitSummary, 14, yPos + 6);
+          
+          if (item.imageUrl) {
+            const imgData = await loadImage(item.imageUrl);
+            if (imgData) {
+              doc.addImage(imgData, 'JPEG', 130, yPos - 2, 60, 40);
+            }
+          }
+          
+          yPos += Math.max(14 + (splitSummary.length * 5), 45);
+        }
+      }
+      const addWatermark = (pdfDoc) => {
+        const totalPages = pdfDoc.internal.getNumberOfPages();
+        for (let j = 1; j <= totalPages; j++) {
+          pdfDoc.setPage(j);
+          pdfDoc.saveGraphicsState();
+          pdfDoc.setGState(new pdfDoc.GState({ opacity: 0.1 }));
+          pdfDoc.setFontSize(150);
+          pdfDoc.setTextColor(150, 150, 150);
+          pdfDoc.text(
+            "SRI",
+            pdfDoc.internal.pageSize.getWidth() / 2,
+            pdfDoc.internal.pageSize.getHeight() / 2,
+            { angle: 45, align: "center", baseline: "middle" }
+          );
+          pdfDoc.restoreGraphicsState();
+        }
+      };
+      addWatermark(doc);
+      
+      doc.save(`Analysis_Report_${uploadResult.folderName}.pdf`);
+    } catch (error) {
+      console.error("Failed to export PDF:", error);
+      alert("Failed to export PDF. Check console for details.");
+    }
+  };
+
   const formatBytes = (bytes) => {
     if (!bytes) return "0 B";
     const sizes = ["B", "KB", "MB", "GB"];
@@ -851,7 +957,7 @@ export default function UploadSummarize() {
               <button className="btn link back-btn" onClick={resetToUpload}>
                 ← Back to upload
               </button>
-              <button className="btn secondary">
+              <button className="btn secondary" onClick={handleExportPDF}>
                 <span className="icon-left">📥</span>
                 Export Results
               </button>
@@ -905,19 +1011,6 @@ export default function UploadSummarize() {
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="instructions">
-                <h4>What's happening:</h4>
-                <ul>
-                  <li>✅ Videos uploaded to server storage</li>
-                  <li>✅ Python analysis script started</li>
-                  <li>🔄 Processing frames with YOLO object detection</li>
-                  <li>🔄 Uploading key frames to Cloudinary</li>
-                  <li>🔄 Generating AI summaries with Gemini</li>
-                  <li>🔄 Streaming results via WebSocket to this dashboard</li>
-                  <li>⏳ Results will appear in the live feed above</li>
-                </ul>
               </div>
             </div>
           </div>

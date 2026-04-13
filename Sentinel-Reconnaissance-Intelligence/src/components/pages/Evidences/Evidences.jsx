@@ -2363,6 +2363,15 @@ function Evidences() {
               const mediaUrl = getMediaUrl(event);
               const persons = event.data?.persons || event.persons || [];
               
+              let displayName = event.event_type ? event.event_type.replace(/_/g, ' ') : 'Unknown Event';
+              if (event.event_type === 'FACE_MATCH') {
+                if (persons.length > 0) {
+                  displayName = persons.map(p => p.name).join(', ');
+                } else if (event.data?.metadata?.name) {
+                  displayName = event.data.metadata.name;
+                }
+              }
+              
               return (
                 <div className="evidences-card" key={event._id || event.id || index}>
                   <div className="evidences-card-header">
@@ -2372,7 +2381,7 @@ function Evidences() {
                       </div>
                       <div>
                         <div className="evidences-file-name">
-                          {event.event_type ? event.event_type.replace(/_/g, ' ') : 'Unknown Event'}
+                          {displayName}
                         </div>
                         <div className="evidences-file-meta">
                           Camera: {event.camera_id || 'Unknown'} • {formatTimestamp(event.timestamp)}
@@ -2380,7 +2389,7 @@ function Evidences() {
                       </div>
                     </div>
                     <span className={`evidences-event-type ${getEventTypeClass(event.event_type)}`}>
-                      {event.event_type ? event.event_type.replace(/_/g, ' ') : 'Event'}
+                      {displayName}
                     </span>
                   </div>
                   

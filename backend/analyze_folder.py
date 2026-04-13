@@ -119,7 +119,7 @@ CLOUDINARY_FOLDER = "events/"
 
 GENAI_API_KEY = os.environ.get("API_KEY")
 
-FRAME_SKIP = 30
+FRAME_SKIP = 1
 THROTTLE_SECONDS = 4.0
 # -------------------------
 
@@ -215,7 +215,7 @@ def summarize_from_bytes(img_bytes):
             "contents": [{
                 "parts": [
                     {"text": prompt},
-                    {"inline_data": {"mime_type": "image/jpeg", "data": img_b64}}
+                    {"inlineData": {"mimeType": "image/jpeg", "data": img_b64}}
                 ]
             }]
         }
@@ -227,7 +227,10 @@ def summarize_from_bytes(img_bytes):
             return resp_data["candidates"][0]["content"]["parts"][0]["text"].strip()
         else:
             print("GEMINI API ERROR (REST):", resp_data)
-            return "Summary failed: Model returned error."
+            error_msg = resp_data.get("error", {}).get("message", "Model returned error.")
+            if "quota" in error_msg.lower():
+                return f"Google API Quota Exceeded. Please try again later."
+            return f"API Error: {error_msg[:80]}..."
             
     except Exception as e:
         print("GEMINI API ERROR:", e)
@@ -270,7 +273,7 @@ def analyze_video(path, folder_name):
             break
 
         frame_idx += 1
-        if frame_idx % interval != 0:
+        if frame_idx != 1 and frame_idx % interval != 0:
             continue
 
         # ---- TIMESTAMP AND FRAME DURATION ----
@@ -290,13 +293,15 @@ def analyze_video(path, folder_name):
             detected_targets = [res for res in results if res[0] != "Unknown"]
             
             for name, score, box in detected_targets:
+                # Always accurately map and draw boxes for everyone in the frame natively
+                x1, y1, x2, y2 = [int(v) for v in box]
+                cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.putText(annotated, f"{name} ({score:.2f})", (x1, max(y1-10, 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                
+                # But rigorously throttle and ONLY send to Google API if it's a completely NEW Face
                 if name not in seen_faces:
                     seen_faces.add(name)
                     target_detected = True
-                    # Vigorously map tracking boxes on the target's geometry natively
-                    x1, y1, x2, y2 = [int(v) for v in box]
-                    cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                    cv2.putText(annotated, f"TARGET MATCH: {name} ({score:.2f})", (x1, max(y1-10, 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
         # ---- HASHSET SILENT REJECTION ----
         # If no targeted faces were found in this frame (or they've already been logged earlier), skip!
