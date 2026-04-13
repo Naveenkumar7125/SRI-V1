@@ -273,6 +273,16 @@ def analyze_video(path, folder_name):
             break
 
         frame_idx += 1
+        
+        # --- PUSH REAL-TIME PROGRESS ---
+        if frame_idx % 10 == 0:
+            prog = int((frame_idx / total_frames) * 100) if total_frames > 0 else 0
+            print(json.dumps({
+                "type": "progress",
+                "progress": min(prog, 99),
+                "videoName": video_name
+            }))
+            sys.stdout.flush()
         if frame_idx != 1 and frame_idx % interval != 0:
             continue
 

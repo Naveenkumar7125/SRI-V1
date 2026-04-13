@@ -150,6 +150,17 @@ router.post("/upload", upload.array("files"), (req, res) => {
                   videoName: parsed.videoName || targetFolderName,
                 });
               }
+            } else if (parsed.type === "progress") {
+              if (analysisStore[folderId]) {
+                analysisStore[folderId].progress = parsed.progress || 0;
+              }
+              if (io) {
+                io.to(`folder_${folderId}`).emit("analysis_progress", {
+                  folderId,
+                  progress: parsed.progress || 0,
+                  videoName: parsed.videoName || targetFolderName,
+                });
+              }
             } else if (parsed.type === "complete") {
               if (analysisStore[folderId]) {
                 analysisStore[folderId].status = "completed";
@@ -189,30 +200,35 @@ router.post("/upload", upload.array("files"), (req, res) => {
             // -----------------------------------------------------
             try {
               const data = analysisStore[folderId];
-              const videoData = {
-                originalName: targetFolderName,
-                videoUrl: "", // Optional
-                duration: "0", 
-                shortSummary: "Analysis output completed.", 
-                finalSummary: "Analysis completed.",
-                threatLevel: "low",
-                confidence: 95,
-                timeline: data.events.map(ev => ({ time: ev.timestamp, event: ev.summary })),
-                detectedFrames: data.keyFrames.map(f => ({
-                  timestamp: f.timestamp,
-                  duration: f.duration,
-                  imageUrl: f.imageUrl,
-                  shortSummary: f.shortSummary
-                }))
-              };
+              
+              if (!data.keyFrames || data.keyFrames.length === 0) {
+                 console.log(`⚠️ No frames detected in folder: ${targetFolderName}. Skipping MongoDB Archive Save.`);
+              } else {
+                const videoData = {
+                  originalName: targetFolderName,
+                  videoUrl: "", // Optional
+                  duration: "0", 
+                  shortSummary: "Analysis output completed.", 
+                  finalSummary: "Analysis completed.",
+                  threatLevel: "low",
+                  confidence: 95,
+                  timeline: data.events.map(ev => ({ time: ev.timestamp, event: ev.summary })),
+                  detectedFrames: data.keyFrames.map(f => ({
+                    timestamp: f.timestamp,
+                    duration: f.duration,
+                    imageUrl: f.imageUrl,
+                    shortSummary: f.shortSummary
+                  }))
+                };
 
-              await Folder.create({
-                name: targetFolderName,
-                description: "Automated analysis session",
-                createdBy: "System",
-                videos: [videoData]
-              });
-              console.log(`✅ MongoDB Archive Saved for folder: ${targetFolderName}`);
+                await Folder.create({
+                  name: targetFolderName,
+                  description: "Automated analysis session",
+                  createdBy: "System",
+                  videos: [videoData]
+                });
+                console.log(`✅ MongoDB Archive Saved for folder: ${targetFolderName}`);
+              }
             } catch (dbErr) {
               console.error("❌ Failed to save history to MongoDB:", dbErr);
             }

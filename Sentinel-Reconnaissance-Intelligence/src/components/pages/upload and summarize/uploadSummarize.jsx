@@ -92,10 +92,10 @@ const LiveFeedPanel = ({ liveFrames, analysisProgress }) => {
 
       <div className="live-frames-container">
         {liveFrames.length === 0 ? (
-          <div className="no-frames">
-            <div className="no-frames-icon">📹</div>
-            <p>Waiting for live analysis...</p>
-            <p className="video-subtitle">Frames will appear here in real-time</p>
+          <div className="no-frames-animated">
+            <div className="radar-spinner"></div>
+            <p style={{ fontWeight: 600, fontSize: "16px", marginBottom: "4px", color: "#333" }}>Scanning Video Feed for Targets...</p>
+            <p className="video-subtitle" style={{ fontSize: "14px", color: "#64748b" }}>Processing frames and algorithms in real-time</p>
           </div>
         ) : (
           liveFrames.map((frame, index) => (
